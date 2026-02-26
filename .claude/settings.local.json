@@ -23,7 +23,21 @@
       "Bash(git init)",
       "Bash(git remote add origin https://github.com/anakkaw/scholar_sci.git)",
       "Bash(git branch -m main)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git commit:*)",
+      "Bash(git push -u origin main)",
+      "Bash(git push -u origin main --force)",
+      "Bash(git add lib/storage.ts)",
+      "Bash(git push)",
+      "Bash(git add lib/auth.config.ts)",
+      "Bash(openssl rand -base64 32)",
+      "Bash(git add middleware.ts)",
+      "Bash(git add package.json)",
+      "Bash(npm run build)",
+      "Bash(gh api repos/anakkaw/scholar_sci)",
+      "Bash(git add app/api/debug-auth/route.ts)",
+      "Bash(npx tsx -e \":*)",
+      "Bash(git add lib/auth.ts prisma/seed.ts)"
     ]
   }
 }
