@@ -119,7 +119,7 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
 
                     <div className="flex flex-col items-center gap-4">
                         {form.watch("profileImageUrl") ? (
-                            <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                            <div className="relative w-28 h-28 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg">
                                 <img
                                     src={form.watch("profileImageUrl")}
                                     alt="Profile"
@@ -127,8 +127,8 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                 />
                             </div>
                         ) : (
-                            <div className="w-40 h-40 rounded-full bg-slate-100 flex items-center justify-center border-4 border-white shadow-lg">
-                                <span className="text-slate-400">ไม่มีรูป</span>
+                            <div className="w-28 h-28 sm:w-40 sm:h-40 rounded-full bg-slate-100 flex items-center justify-center border-4 border-white shadow-lg">
+                                <span className="text-slate-400 text-sm">ไม่มีรูป</span>
                             </div>
                         )}
                         <FileUpload

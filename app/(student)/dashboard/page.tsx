@@ -73,23 +73,6 @@ function GpaRing({ value, max = 4.0 }: { value: number; max?: number }) {
     );
 }
 
-function ActivityDotsViz({ count }: { count: number }) {
-    const display = Math.min(count, 12);
-    const dots = Array.from({ length: 12 }, (_, i) => i < display);
-    return (
-        <div className="flex flex-wrap gap-1.5 mt-1">
-            {dots.map((filled, i) => (
-                <span
-                    key={i}
-                    className={`w-2.5 h-2.5 rounded-full transition-all ${filled ? "bg-amber-400" : "bg-amber-100"}`}
-                />
-            ))}
-            {count > 12 && (
-                <span className="text-[10px] text-amber-500 font-semibold self-center">+{count - 12}</span>
-            )}
-        </div>
-    );
-}
 
 function MilestoneProgressBar({ submitted, total }: { submitted: number; total: number }) {
     const pct = total > 0 ? (submitted / total) * 100 : 0;
@@ -164,12 +147,11 @@ export default async function DashboardPage() {
 
     if (!userProfile) redirect("/select-scholarship");
 
-    const [latestAcademicRecord, activitiesCount, submittedReports, mandatoryParticipations] = await Promise.all([
+    const [latestAcademicRecord, submittedReports, mandatoryParticipations] = await Promise.all([
         prisma.academicRecord.findFirst({
             where: { userId },
             orderBy: [{ academicYear: "desc" }, { semester: "desc" }],
         }),
-        prisma.achievement.count({ where: { userId, type: "ACTIVITY" } }),
         prisma.progressReport.findMany({
             where: { userId, milestoneId: { not: null } },
             select: { milestoneId: true },
@@ -236,7 +218,7 @@ export default async function DashboardPage() {
                 <div className="relative z-10 mt-6 grid grid-cols-3 gap-3">
                     {[
                         { label: "GPA ล่าสุด", value: latestAcademicRecord ? latestAcademicRecord.gpa.toFixed(2) : "—" },
-                        { label: "กิจกรรมบังคับ", value: mandatoryTotal > 0 ? `${mandatoryAttended}/${mandatoryTotal}` : String(activitiesCount) },
+                        { label: "กิจกรรมบังคับ", value: mandatoryTotal > 0 ? `${mandatoryAttended}/${mandatoryTotal}` : "—" },
                         { label: "รายงาน", value: totalMilestones > 0 ? `${submittedMilestonesCount}/${totalMilestones}` : "—" },
                     ].map(({ label, value }) => (
                         <div key={label} className="rounded-xl bg-white/10 backdrop-blur-sm px-3 py-2.5 border border-white/15">
@@ -260,15 +242,15 @@ export default async function DashboardPage() {
             <div className="grid gap-4 md:grid-cols-3">
 
                 {/* Card 1: GPA */}
-                <Card className="relative overflow-hidden border-0 shadow-md shadow-blue-100/50 bg-white hover:shadow-lg hover:shadow-blue-100/60 transition-all duration-200">
+                <Card className="relative overflow-hidden border-0 shadow-md shadow-blue-100/50 bg-white dark:bg-gray-800 hover:shadow-lg hover:shadow-blue-100/60 transition-all duration-200">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-blue-500 rounded-l-lg" />
                     <CardBgShape color="#3b82f6" />
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 pt-4 pl-5">
                         <div>
                             <p className="text-[11px] font-semibold tracking-wider text-blue-500/70 uppercase mb-0.5">เงื่อนไขที่ 1</p>
-                            <CardTitle className="text-sm font-semibold text-slate-700">ผลการเรียน (GPA)</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-gray-300">ผลการเรียน (GPA)</CardTitle>
                         </div>
-                        <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
                             <GraduationCap className="h-4 w-4 text-blue-500" />
                         </div>
                     </CardHeader>
@@ -297,13 +279,13 @@ export default async function DashboardPage() {
                                 {(minGpa != null || minGpax != null) && (
                                     <div className="flex flex-wrap gap-1.5">
                                         {minGpa != null && (
-                                            <div className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${gpaOk ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                                            <div className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${gpaOk ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300" : "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"}`}>
                                                 {gpaOk ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                                                 GPA ≥ {minGpa.toFixed(2)}
                                             </div>
                                         )}
                                         {minGpax != null && (
-                                            <div className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${gpaxOk ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                                            <div className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${gpaxOk ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300" : "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"}`}>
                                                 {gpaxOk ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                                                 GPAX ≥ {minGpax.toFixed(2)}
                                             </div>
@@ -329,20 +311,19 @@ export default async function DashboardPage() {
                 </Card>
 
                 {/* Card 2: Activities */}
-                <Card className="relative overflow-hidden border-0 shadow-md shadow-amber-100/50 bg-white hover:shadow-lg hover:shadow-amber-100/60 transition-all duration-200">
+                <Card className="relative overflow-hidden border-0 shadow-md shadow-amber-100/50 bg-white dark:bg-gray-800 hover:shadow-lg hover:shadow-amber-100/60 transition-all duration-200">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-amber-500 rounded-l-lg" />
                     <CardBgShape color="#f59e0b" />
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 pt-4 pl-5">
                         <div>
                             <p className="text-[11px] font-semibold tracking-wider text-amber-500/70 uppercase mb-0.5">เงื่อนไขที่ 2</p>
-                            <CardTitle className="text-sm font-semibold text-slate-700">การเข้าร่วมกิจกรรม</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-gray-300">การเข้าร่วมกิจกรรม</CardTitle>
                         </div>
-                        <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
                             <Trophy className="h-4 w-4 text-amber-500" />
                         </div>
                     </CardHeader>
                     <CardContent className="pl-5 pb-4 space-y-3">
-                        {/* Mandatory activities (formal condition) */}
                         {mandatoryTotal > 0 ? (
                             <div className="space-y-1.5">
                                 <div className="flex items-baseline gap-1.5">
@@ -366,34 +347,12 @@ export default async function DashboardPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="space-y-1">
-                                <div className="flex items-baseline gap-1.5">
-                                    <span className="text-3xl font-bold text-amber-700">{activitiesCount}</span>
-                                    <span className="text-xs text-muted-foreground">กิจกรรม</span>
+                            <div className="flex items-center gap-2 py-2">
+                                <Clock className="w-4 h-4 text-slate-300" />
+                                <div>
+                                    <p className="text-sm text-slate-400">ยังไม่มีกิจกรรมบังคับ</p>
+                                    <p className="text-[11px] text-muted-foreground">ผู้ดูแลยังไม่ได้กำหนดกิจกรรมบังคับ</p>
                                 </div>
-                                <ActivityDotsViz count={activitiesCount} />
-                            </div>
-                        )}
-                        {/* General activities count (secondary) */}
-                        {mandatoryTotal > 0 && activitiesCount > 0 && (
-                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground border-t border-dashed border-slate-100 pt-2">
-                                <Trophy className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                                <span>กิจกรรม/ผลงาน: <span className="font-semibold text-amber-700">{activitiesCount}</span> รายการ</span>
-                            </div>
-                        )}
-                        {mandatoryTotal === 0 && (
-                            <div className="flex items-center gap-1.5">
-                                {activitiesCount > 0 ? (
-                                    <>
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                                        <span className="text-[11px] text-green-600 font-medium">มีการบันทึกกิจกรรมแล้ว</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Clock className="w-3.5 h-3.5 text-slate-300" />
-                                        <span className="text-[11px] text-muted-foreground">ยังไม่มีการบันทึกกิจกรรม</span>
-                                    </>
-                                )}
                             </div>
                         )}
                         <Link href="/achievements">
@@ -405,15 +364,15 @@ export default async function DashboardPage() {
                 </Card>
 
                 {/* Card 3: Milestones */}
-                <Card className="relative overflow-hidden border-0 shadow-md shadow-green-100/50 bg-white hover:shadow-lg hover:shadow-green-100/60 transition-all duration-200">
+                <Card className="relative overflow-hidden border-0 shadow-md shadow-green-100/50 bg-white dark:bg-gray-800 hover:shadow-lg hover:shadow-green-100/60 transition-all duration-200">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-green-400 to-emerald-500 rounded-l-lg" />
                     <CardBgShape color="#10b981" />
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 pt-4 pl-5">
                         <div>
                             <p className="text-[11px] font-semibold tracking-wider text-green-500/70 uppercase mb-0.5">เงื่อนไขที่ 3</p>
-                            <CardTitle className="text-sm font-semibold text-slate-700">รายงานโครงงาน</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-gray-300">รายงานโครงงาน</CardTitle>
                         </div>
-                        <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
                             <FileText className="h-4 w-4 text-green-500" />
                         </div>
                     </CardHeader>
@@ -431,7 +390,7 @@ export default async function DashboardPage() {
                         )}
 
                         {pendingMilestones.length > 0 ? (
-                            <div className="text-[11px] text-amber-700 bg-amber-50 px-2.5 py-1.5 rounded-lg border border-amber-100 flex items-start gap-1.5">
+                            <div className="text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1.5 rounded-lg border border-amber-100 dark:border-amber-800/30 flex items-start gap-1.5">
                                 <Clock className="w-3 h-3 mt-0.5 flex-shrink-0 text-amber-500" />
                                 <span className="leading-snug">รอส่ง: <span className="font-medium">{pendingMilestones[0].title}</span></span>
                             </div>
@@ -455,11 +414,11 @@ export default async function DashboardPage() {
 
             {/* ── Milestone Timeline ──────────────────────────── */}
             {totalMilestones > 0 && (
-                <Card className="border-0 shadow-sm bg-white">
+                <Card className="border-0 shadow-sm bg-white dark:bg-gray-800">
                     <CardHeader className="pb-3">
                         <div className="flex items-center gap-2">
                             <div className="w-1 h-5 rounded-full bg-gradient-to-b from-amber-400 to-amber-600" />
-                            <CardTitle className="text-sm font-semibold text-slate-700">ความคืบหน้า Milestone</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-slate-700 dark:text-gray-300">ความคืบหน้า Milestone</CardTitle>
                         </div>
                     </CardHeader>
                     <CardContent className="pb-4">
@@ -473,14 +432,14 @@ export default async function DashboardPage() {
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold border-2 transition-all
                                                 ${done
                                                     ? "bg-green-500 border-green-500 text-white shadow-sm shadow-green-200"
-                                                    : "bg-white border-slate-200 text-slate-400"
+                                                    : "bg-white dark:bg-gray-700 border-slate-200 dark:border-gray-600 text-slate-400 dark:text-gray-500"
                                                 }`}>
                                                 {done ? "✓" : idx + 1}
                                             </div>
-                                            <span className="text-[9px] text-muted-foreground max-w-[60px] text-center leading-tight truncate">{m.title}</span>
+                                            <span className="text-[10px] text-muted-foreground max-w-[60px] text-center leading-tight truncate">{m.title}</span>
                                         </div>
                                         {!isLast && (
-                                            <div className={`w-8 h-0.5 mb-4 rounded-full ${done ? "bg-green-300" : "bg-slate-100"}`} />
+                                            <div className={`w-8 h-0.5 mb-4 rounded-full ${done ? "bg-green-300 dark:bg-green-700" : "bg-slate-100 dark:bg-gray-700"}`} />
                                         )}
                                     </div>
                                 );
@@ -491,23 +450,23 @@ export default async function DashboardPage() {
             )}
 
             {/* ── Contact Card ────────────────────────────────── */}
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-r from-amber-50 to-orange-50 shadow-sm">
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 shadow-sm">
                 <ContactDecor />
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
-                            <Mail className="w-3.5 h-3.5 text-amber-700" />
+                        <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                            <Mail className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                         </div>
-                        <CardTitle className="text-sm font-semibold text-amber-900">ติดต่อผู้ดูแลโครงการ</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-amber-900 dark:text-amber-300">ติดต่อผู้ดูแลโครงการ</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="pt-0 pb-4">
                     <div className="grid sm:grid-cols-2 gap-3">
-                        <div className="flex items-center gap-2.5 text-sm text-amber-800/80">
+                        <div className="flex items-center gap-2.5 text-sm text-amber-800/80 dark:text-amber-300/80">
                             <Mail className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                             <span>info@scholarsci.ac.th</span>
                         </div>
-                        <div className="flex items-center gap-2.5 text-sm text-amber-800/80">
+                        <div className="flex items-center gap-2.5 text-sm text-amber-800/80 dark:text-amber-300/80">
                             <Phone className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                             <span>02-xxx-xxxx</span>
                         </div>

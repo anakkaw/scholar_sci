@@ -107,17 +107,27 @@ export const AcademicRecordSchema = z.object({
     semester:       z.string().min(1, "กรุณาเลือกภาคเรียน"),
     gpa:            z.coerce.number().min(0, "GPA ต้องไม่ต่ำกว่า 0").max(4, "GPA ต้องไม่เกิน 4.00"),
     gpax:           z.coerce.number().min(0, "GPAX ต้องไม่ต่ำกว่า 0").max(4, "GPAX ต้องไม่เกิน 4.00"),
-    transcriptUrl:  z.string().url("URL ไม่ถูกต้อง").optional().or(z.literal("")),
-    transcriptName: z.string().optional(),
+    transcriptUrl:  z.string().min(1, "กรุณาแนบไฟล์ Transcript").url("URL ไม่ถูกต้อง"),
+    transcriptName: z.string().min(1, "กรุณาแนบไฟล์ Transcript"),
     transcriptSize: z.number().optional(),
     transcriptType: z.string().optional(),
+});
+
+export const MessageThreadSchema = z.object({
+    subject: z.string().min(1, "กรุณาระบุหัวข้อ").max(200, "หัวข้อยาวเกินไป"),
+    content: z.string().min(1, "กรุณากรอกข้อความ").max(2000, "ข้อความยาวเกินไป (สูงสุด 2,000 ตัวอักษร)"),
+});
+
+export const MessageReplySchema = z.object({
+    threadId: z.string().min(1),
+    content: z.string().min(1, "กรุณากรอกข้อความ").max(2000, "ข้อความยาวเกินไป (สูงสุด 2,000 ตัวอักษร)"),
 });
 
 export const DocumentSchema = z.object({
     title: z.string().min(1, "กรุณาระบุชื่อเอกสาร"),
     category: z.string().min(1, "กรุณาระบุหมวดหมู่"),
     scholarshipScope: z.enum(["ALL", "SPECIFIC"]),
-    scholarshipId: z.string().nullable().optional(),
+    scholarshipIds: z.array(z.string()).default([]),
     fileUrl: z.string().url("URL ของไฟล์ไม่ถูกต้อง"),
     fileName: z.string().min(1, "กรุณาระบุชื่อไฟล์"),
     fileSizeBytes: z.number().min(1, "ขนาดไฟล์ไม่ถูกต้อง"),

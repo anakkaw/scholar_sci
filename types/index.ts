@@ -33,20 +33,6 @@ declare module "next-auth/jwt" {
 
 // ── App types ─────────────────────────────────────────────────────────────────
 
-export type ApiResponse<T = unknown> = {
-    success: boolean;
-    data?: T;
-    error?: string;
-};
-
-export type PaginatedResponse<T> = {
-    items: T[];
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-};
-
 export type AchievementTypeLabel = {
     value: string;
     label: string;

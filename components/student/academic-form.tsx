@@ -123,9 +123,14 @@ export function AcademicForm({ enrollmentYear }: { enrollmentYear?: number | nul
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">แนบ Transcript (PDF)</label>
+                            <label className="text-sm font-medium leading-none">
+                                แนบ Transcript (PDF) <span className="text-red-500">*</span>
+                            </label>
                             <FileUpload onUpload={handleUploadFile} disabled={isPending} accept=".pdf,.jpg,.jpeg,.png"
                                 currentFileName={form.watch("transcriptName")} currentFileUrl={form.watch("transcriptUrl")} />
+                            {form.formState.errors.transcriptUrl && (
+                                <p className="text-sm text-red-500">{form.formState.errors.transcriptUrl.message}</p>
+                            )}
                         </div>
 
                         <div className="pt-4 flex justify-end space-x-2">

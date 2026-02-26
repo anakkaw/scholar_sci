@@ -26,7 +26,7 @@ export const createAcademicRecordAction = async (values: z.infer<typeof Academic
         await prisma.academicRecord.create({
             data: {
                 userId: session.user.id, academicYear, semester, gpa, gpax,
-                transcriptUrl: transcriptUrl || null, transcriptName: transcriptName || null, status: "PENDING",
+                transcriptUrl, transcriptName, status: "PENDING",
             },
         });
 

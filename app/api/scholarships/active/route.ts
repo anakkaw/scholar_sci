@@ -19,6 +19,6 @@ export async function GET() {
         return NextResponse.json(activeScholarships);
     } catch (error) {
         console.error("Error fetching active scholarships:", error);
-        return new NextResponse("Internal server error", { status: 500 });
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
