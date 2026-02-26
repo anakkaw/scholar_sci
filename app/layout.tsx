@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Sarabun } from "next/font/google";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 
 const sarabun = Sarabun({
@@ -18,7 +19,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="th" suppressHydrationWarning>
-            <body className={`${sarabun.variable} ${sarabun.className} min-h-screen bg-gray-50`}>{children}</body>
+            <body className={`${sarabun.variable} ${sarabun.className} min-h-screen bg-gray-50 dark:bg-gray-900`}>
+                <ThemeProvider>{children}</ThemeProvider>
+            </body>
         </html>
     );
 }

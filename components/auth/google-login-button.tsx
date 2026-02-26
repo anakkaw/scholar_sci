@@ -8,7 +8,7 @@ export const GoogleLoginButton = () => {
         <Button
             type="button"
             variant="outline"
-            className="w-full bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+            className="w-full bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:border-gray-600"
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
         >
             <svg

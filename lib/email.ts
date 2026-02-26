@@ -63,6 +63,48 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     });
 }
 
+export async function sendNewMessageToAdminEmail(
+    adminEmail: string,
+    studentName: string,
+    subject: string,
+    preview: string,
+) {
+    const appUrl = getAppUrl();
+    const truncated = preview.length > 120 ? preview.slice(0, 120) + "..." : preview;
+    await transporter.sendMail({
+        from: FROM_EMAIL,
+        to: adminEmail,
+        subject: `[ScholarSci] ข้อความใหม่จาก ${studentName}`,
+        html: emailHtml(
+            "มีข้อความใหม่จากนิสิต",
+            `<strong>${studentName}</strong> ได้ส่งข้อความใหม่ในหัวข้อ "<strong>${subject}</strong>"<br/><br/>ตัวอย่างข้อความ: ${truncated}`,
+            "ดูข้อความ",
+            `${appUrl}/admin/messages`,
+            "กรุณาตอบกลับนิสิตผ่านระบบ ScholarSci",
+        ),
+    });
+}
+
+export async function sendReplyToStudentEmail(
+    studentEmail: string,
+    studentName: string,
+    replierName: string,
+) {
+    const appUrl = getAppUrl();
+    await transporter.sendMail({
+        from: FROM_EMAIL,
+        to: studentEmail,
+        subject: `[ScholarSci] ${replierName} ได้ตอบกลับข้อความของคุณ`,
+        html: emailHtml(
+            "มีการตอบกลับข้อความของคุณ",
+            `สวัสดี ${studentName},<br/><br/><strong>${replierName}</strong> ได้ตอบกลับข้อความของคุณในระบบ ScholarSci กรุณาเข้าสู่ระบบเพื่อดูข้อความ`,
+            "ดูข้อความ",
+            `${appUrl}/messages`,
+            "อีเมลนี้ส่งโดยอัตโนมัติ กรุณาตอบกลับผ่านระบบ ScholarSci เท่านั้น",
+        ),
+    });
+}
+
 export async function sendVerificationEmail(email: string, token: string) {
     const verifyUrl = `${getAppUrl()}/verify-email?token=${token}`;
     await transporter.sendMail({

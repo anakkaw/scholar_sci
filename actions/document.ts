@@ -9,19 +9,20 @@ export const createDocumentAction = async (data: z.infer<typeof DocumentSchema>)
     safeAction(async () => {
         const session = await requireAdmin();
 
-        const parsedData = DocumentSchema.parse({
-            ...data,
-            scholarshipId: data.scholarshipScope === "ALL" ? null : data.scholarshipId,
-        });
+        const parsedData = DocumentSchema.parse(data);
+        const scholarshipIds = parsedData.scholarshipScope === "ALL" ? [] : parsedData.scholarshipIds;
 
         await prisma.$transaction([
             prisma.document.create({
                 data: {
                     title: parsedData.title, category: parsedData.category,
-                    scholarshipScope: parsedData.scholarshipScope, scholarshipId: parsedData.scholarshipId,
+                    scholarshipScope: parsedData.scholarshipScope,
                     fileUrl: parsedData.fileUrl, fileName: parsedData.fileName,
                     fileSizeBytes: parsedData.fileSizeBytes, mimeType: parsedData.mimeType,
                     isPublished: parsedData.isPublished, uploadedById: session.user.id,
+                    scholarships: scholarshipIds.length > 0
+                        ? { connect: scholarshipIds.map(id => ({ id })) }
+                        : undefined,
                 },
             }),
             prisma.auditLog.create({

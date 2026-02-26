@@ -30,7 +30,7 @@ export default async function AdminScholarshipsPage() {
                 </Button>
             </div>
 
-            <Card className="border-slate-200 shadow-sm">
+            <Card className="border-slate-200 dark:border-gray-700 shadow-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <GraduationCap className="h-5 w-5" />
@@ -41,10 +41,11 @@ export default async function AdminScholarshipsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="border rounded-md">
+                    <div className="overflow-x-auto">
+                    <div className="border rounded-md min-w-[480px]">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-slate-50">
+                                <TableRow className="bg-slate-50 dark:bg-gray-700">
                                     <TableHead>ชื่อทุนการศึกษา</TableHead>
                                     <TableHead>จำนวน Milestone</TableHead>
                                     <TableHead>นิสิตในโครงการ</TableHead>
@@ -90,6 +91,7 @@ export default async function AdminScholarshipsPage() {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
                     </div>
                 </CardContent>
             </Card>

@@ -33,7 +33,7 @@ export default function RegisterPage() {
                     <CardContent>
                         <RegisterForm />
                     </CardContent>
-                    <CardFooter className="flex justify-center text-sm text-slate-500">
+                    <CardFooter className="flex justify-center text-sm text-slate-500 dark:text-gray-400">
                         มีบัญชีอยู่แล้ว?{" "}
                         <Link
                             href="/login"

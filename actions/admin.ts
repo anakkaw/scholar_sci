@@ -154,8 +154,8 @@ export const adminUpdateAcademicRecordAction = async (recordId: string, gpa: num
 export const createMandatoryActivityAction = async (data: {
     title: string;
     description?: string;
-    date?: string;
     scholarshipId?: string;
+    degreeLevel?: string;
     yearLevel?: number;
 }) =>
     safeAction(async () => {
@@ -164,11 +164,13 @@ export const createMandatoryActivityAction = async (data: {
 
         const profileWhere: Record<string, unknown> = {};
         if (data.scholarshipId) profileWhere.scholarshipId = data.scholarshipId;
+        if (data.degreeLevel) profileWhere.degreeLevel = data.degreeLevel;
         if (data.yearLevel) profileWhere.yearLevel = data.yearLevel;
 
         const matchingStudents = await prisma.user.findMany({
             where: {
                 role: "STUDENT",
+                status: "APPROVED",
                 ...(Object.keys(profileWhere).length > 0 ? { studentProfile: { is: profileWhere } } : {}),
             },
             select: { id: true },
@@ -178,8 +180,8 @@ export const createMandatoryActivityAction = async (data: {
             data: {
                 title: data.title.trim(),
                 description: data.description?.trim() || null,
-                date: data.date ? new Date(data.date) : null,
                 scholarshipId: data.scholarshipId || null,
+                degreeLevel: data.degreeLevel || null,
                 yearLevel: data.yearLevel || null,
             },
         });

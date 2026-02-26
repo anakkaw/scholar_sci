@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { AppLayout, NavItem } from "@/components/layout/AppLayout";
+import { prisma } from "@/lib/prisma";
 import {
     LayoutDashboard,
     Users,
@@ -8,6 +9,7 @@ import {
     FolderKanban,
     Settings,
     CalendarCheck,
+    MessageSquare,
 } from "lucide-react";
 
 export default async function AdminLayout({
@@ -24,6 +26,14 @@ export default async function AdminLayout({
     if (session.user.role !== "ADMIN") {
         redirect("/dashboard");
     }
+
+    // Count unread messages from students
+    const unreadMessages = await prisma.message.count({
+        where: {
+            isRead: false,
+            sender: { role: "STUDENT" },
+        },
+    });
 
     const navItems: NavItem[] = [
         {
@@ -50,6 +60,12 @@ export default async function AdminLayout({
             title: "จัดการคลังเอกสาร",
             href: "/admin/documents",
             icon: <FolderKanban className="h-5 w-5" />,
+        },
+        {
+            title: "ข้อความนิสิต",
+            href: "/admin/messages",
+            icon: <MessageSquare className="h-5 w-5" />,
+            badge: unreadMessages > 0 ? unreadMessages : undefined,
         },
         {
             title: "ตั้งค่าระบบ",

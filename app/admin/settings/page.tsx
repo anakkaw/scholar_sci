@@ -148,11 +148,11 @@ export default async function AdminSettingsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-4 text-center">
+                            <div className="rounded-lg border border-amber-100 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-900/20 p-4 text-center">
                                 <p className="text-3xl font-bold text-amber-700">{totalAdmins}</p>
                                 <p className="text-sm text-muted-foreground mt-1">ผู้ดูแลระบบทั้งหมด</p>
                             </div>
-                            <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-4 text-center">
+                            <div className="rounded-lg border border-amber-100 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-900/20 p-4 text-center">
                                 <p className="text-3xl font-bold text-amber-700">{totalStudents}</p>
                                 <p className="text-sm text-muted-foreground mt-1">นิสิตทุนทั้งหมด</p>
                             </div>
@@ -183,14 +183,14 @@ export default async function AdminSettingsPage() {
                     <div className="border rounded-md">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b bg-slate-50">
+                                <tr className="border-b bg-slate-50 dark:bg-gray-700">
                                     <th className="text-left py-2 px-4 font-medium text-muted-foreground">อีเมล</th>
                                     <th className="text-left py-2 px-4 font-medium text-muted-foreground">วันที่สร้าง</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {adminList.map((admin) => (
-                                    <tr key={admin.id} className="border-b last:border-0 hover:bg-amber-50/30">
+                                    <tr key={admin.id} className="border-b last:border-0 hover:bg-amber-50/30 dark:hover:bg-amber-900/20">
                                         <td className="py-3 px-4 font-medium">{admin.email}</td>
                                         <td className="py-3 px-4 text-xs text-muted-foreground">
                                             {formatDateTime(admin.createdAt)}
@@ -224,7 +224,7 @@ export default async function AdminSettingsPage() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b bg-amber-50/40">
+                                    <tr className="border-b bg-amber-50/40 dark:bg-amber-900/20">
                                         <th className="text-left py-3 px-3 font-medium text-muted-foreground whitespace-nowrap">
                                             วันที่/เวลา
                                         </th>
@@ -258,7 +258,7 @@ export default async function AdminSettingsPage() {
                                         return (
                                             <tr
                                                 key={log.id}
-                                                className="border-b last:border-0 hover:bg-amber-50/30 transition-colors"
+                                                className="border-b last:border-0 hover:bg-amber-50/30 dark:hover:bg-amber-900/20 transition-colors"
                                             >
                                                 <td className="py-3 px-3 text-muted-foreground whitespace-nowrap text-xs">
                                                     {formatDateTime(log.createdAt)}

@@ -26,7 +26,7 @@ export function ScholarshipStatusToggle({ id, initialState }: { id: string, init
             />
             <label
                 htmlFor={`status-${id}`}
-                className={`text-sm font-medium leading-none ${initialState ? "text-green-600" : "text-slate-500"}`}
+                className={`text-sm font-medium leading-none ${initialState ? "text-green-600" : "text-slate-500 dark:text-gray-400"}`}
             >
                 {initialState ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
             </label>

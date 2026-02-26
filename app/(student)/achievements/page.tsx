@@ -17,7 +17,7 @@ export default async function AchievementsPage() {
         prisma.mandatoryActivityParticipation.findMany({
             where: { userId: session.user.id },
             include: { activity: true },
-            orderBy: { activity: { date: "desc" } },
+            orderBy: { activity: { createdAt: "desc" } },
         }),
         prisma.achievement.findMany({
             where: { userId: session.user.id, type: { not: "ACTIVITY" } },
@@ -31,15 +31,15 @@ export default async function AchievementsPage() {
     const getTypeLabel = (val: string) => ACHIEVEMENT_TYPES.find(t => t.value === val)?.label ?? val;
 
     const PortfolioCard = ({ achievement }: { achievement: typeof achievements[number] }) => (
-        <div className="relative rounded-xl border border-slate-100 bg-white hover:shadow-md transition-shadow overflow-hidden">
+        <div className="relative rounded-xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-amber-500" />
             <div className="pl-5 pr-4 py-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                     <div className="space-y-1 flex-1 min-w-0">
-                        <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase border border-slate-200 rounded-full px-2 py-0.5">
+                        <span className="text-[10px] font-semibold tracking-wider text-slate-400 dark:text-gray-400 uppercase border border-slate-200 dark:border-gray-600 rounded-full px-2 py-0.5">
                             {getTypeLabel(achievement.type)}
                         </span>
-                        <h4 className="font-semibold text-sm text-slate-800 leading-snug mt-1">{achievement.title}</h4>
+                        <h4 className="font-semibold text-sm text-slate-800 dark:text-gray-200 leading-snug mt-1">{achievement.title}</h4>
                     </div>
                 </div>
 
@@ -57,11 +57,11 @@ export default async function AchievementsPage() {
                 </div>
 
                 {achievement.attachments.length > 0 && (
-                    <div className="flex items-center gap-2 pt-2 border-t border-dashed border-slate-100 flex-wrap">
-                        <span className="text-[11px] text-slate-400">ไฟล์แนบ:</span>
+                    <div className="flex items-center gap-2 pt-2 border-t border-dashed border-slate-100 dark:border-gray-700 flex-wrap">
+                        <span className="text-[11px] text-slate-400 dark:text-gray-500">ไฟล์แนบ:</span>
                         {achievement.attachments.map(att => (
                             <a key={att.id} href={att.fileUrl || "#"} target="_blank" rel="noreferrer"
-                                className="text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-lg inline-flex items-center gap-1">
+                                className="text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-lg inline-flex items-center gap-1">
                                 <FileText className="w-3 h-3" />{att.fileName}
                             </a>
                         ))}
@@ -75,7 +75,7 @@ export default async function AchievementsPage() {
                     </a>
                 )}
 
-                <div className="flex justify-end pt-1 border-t border-dashed border-slate-100">
+                <div className="flex justify-end pt-1 border-t border-dashed border-slate-100 dark:border-gray-700">
                     <form action={async () => {
                         "use server";
                         await deleteAchievementAction(achievement.id);
@@ -102,56 +102,36 @@ export default async function AchievementsPage() {
                 <AchievementForm />
             </div>
 
-            {/* Section 1: Mandatory Activities (admin-recorded) */}
-            <Card className="border-0 shadow-sm">
-                <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                        <div className="w-1 h-5 rounded-full bg-gradient-to-b from-amber-400 to-amber-500" />
-                        <div>
-                            <CardTitle className="text-sm font-semibold">กิจกรรมบังคับ</CardTitle>
-                            <CardDescription className="text-xs mt-0.5">
-                                กิจกรรมที่ทุนกำหนดให้เข้าร่วม · {participations.length} รายการ
-                            </CardDescription>
-                        </div>
+            {/* Section 1: Mandatory Activities — compact display */}
+            <div className="rounded-xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-gray-700">
+                    <CalendarCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">กิจกรรมบังคับ</span>
+                    <span className="ml-auto text-[11px] text-muted-foreground">{participations.length} รายการ</span>
+                </div>
+                {participations.length === 0 ? (
+                    <div className="flex items-center gap-2.5 px-4 py-3.5">
+                        <p className="text-xs text-slate-400 dark:text-gray-500">ยังไม่มีกิจกรรมบังคับที่กำหนดให้</p>
                     </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {participations.length === 0 ? (
-                        <div className="flex flex-col items-center py-10 gap-3">
-                            <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center">
-                                <CalendarCheck className="w-7 h-7 text-amber-200" />
+                ) : (
+                    <div className="divide-y divide-slate-50 dark:divide-gray-700/60">
+                        {participations.map(p => (
+                            <div key={p.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                                <p className="text-sm text-slate-700 dark:text-gray-300 leading-snug">{p.activity.title}</p>
+                                {p.attended ? (
+                                    <span className="text-[10px] font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                                        ✓ เข้าร่วม
+                                    </span>
+                                ) : (
+                                    <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                                        รอเข้าร่วม
+                                    </span>
+                                )}
                             </div>
-                            <p className="text-sm text-slate-500">ยังไม่มีกิจกรรมบังคับที่กำหนดให้</p>
-                        </div>
-                    ) : (
-                        participations.map(p => (
-                            <div key={p.id} className="relative rounded-xl border border-amber-100 bg-amber-50/40 overflow-hidden">
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-amber-500" />
-                                <div className="pl-5 pr-4 py-3 space-y-1">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <h4 className="font-semibold text-sm text-slate-800 leading-snug">{p.activity.title}</h4>
-                                        {p.attended ? (
-                                            <span className="text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full shrink-0">
-                                                ✓ เข้าร่วมแล้ว
-                                            </span>
-                                        ) : (
-                                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
-                                                ยังไม่ได้เข้าร่วม
-                                            </span>
-                                        )}
-                                    </div>
-                                    {p.activity.description && (
-                                        <p className="text-xs text-muted-foreground line-clamp-2">{p.activity.description}</p>
-                                    )}
-                                    {p.activity.date && (
-                                        <p className="text-[11px] text-muted-foreground">📅 {formatDate(p.activity.date)}</p>
-                                    )}
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </CardContent>
-            </Card>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {/* Section 2: Student Portfolio */}
             <Card className="border-0 shadow-sm">
@@ -171,11 +151,11 @@ export default async function AchievementsPage() {
                 <CardContent className="space-y-3">
                     {portfolio.length === 0 ? (
                         <div className="flex flex-col items-center py-10 gap-3">
-                            <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center">
-                                <Trophy className="w-7 h-7 text-slate-200" />
+                            <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-gray-700 flex items-center justify-center">
+                                <Trophy className="w-7 h-7 text-slate-200 dark:text-gray-500" />
                             </div>
                             <div className="text-center">
-                                <p className="text-sm font-medium text-slate-500">ยังไม่มีผลงาน</p>
+                                <p className="text-sm font-medium text-slate-500 dark:text-gray-400">ยังไม่มีผลงาน</p>
                                 <p className="text-xs text-muted-foreground mt-0.5">คลิก "เพิ่มผลงาน" เพื่อบันทึกผลงานของคุณ</p>
                             </div>
                         </div>

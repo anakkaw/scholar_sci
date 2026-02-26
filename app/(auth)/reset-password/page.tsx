@@ -36,9 +36,9 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
                     <p className="text-amber-700/60 text-xs mt-0.5 tracking-wider uppercase font-medium">ระบบบริหารจัดการนิสิตทุน</p>
                 </div>
 
-                <Card className="w-full shadow-2xl shadow-amber-200/30 border-0 ring-1 ring-amber-200/80 bg-white/90 backdrop-blur-sm rounded-2xl">
+                <Card className="w-full shadow-2xl shadow-amber-200/30 border-0 ring-1 ring-amber-200/80 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl">
                     <CardHeader className="space-y-1 text-center pb-4">
-                        <CardTitle className="text-xl font-bold tracking-tight text-slate-800">ตั้งรหัสผ่านใหม่</CardTitle>
+                        <CardTitle className="text-xl font-bold tracking-tight text-slate-800 dark:text-gray-200">ตั้งรหัสผ่านใหม่</CardTitle>
                         <CardDescription className="text-sm text-muted-foreground">
                             กรอกรหัสผ่านใหม่ที่ต้องการใช้งาน
                         </CardDescription>
@@ -50,7 +50,7 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
                                     <XCircle className="w-7 h-7 text-red-500" />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-sm font-medium text-slate-700">ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว</p>
+                                    <p className="text-sm font-medium text-slate-700 dark:text-gray-300">ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว</p>
                                     <p className="text-xs text-muted-foreground">ลิงก์รีเซ็ตรหัสผ่านมีอายุ 1 ชั่วโมง</p>
                                 </div>
                                 <Link href="/forgot-password">

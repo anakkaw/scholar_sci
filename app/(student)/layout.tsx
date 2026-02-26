@@ -1,13 +1,15 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { AppLayout, NavItem } from "@/components/layout/AppLayout";
+import { prisma } from "@/lib/prisma";
 import {
     LayoutDashboard,
     User,
     Trophy,
     GraduationCap,
     FileText,
-    FolderOpen
+    FolderOpen,
+    MessageSquare,
 } from "lucide-react";
 
 export default async function StudentLayout({
@@ -24,6 +26,15 @@ export default async function StudentLayout({
     if (session.user.role !== "STUDENT") {
         redirect("/admin/dashboard");
     }
+
+    // Count unread messages from admin
+    const unreadMessages = await prisma.message.count({
+        where: {
+            thread: { studentId: session.user.id },
+            senderId: { not: session.user.id },
+            isRead: false,
+        },
+    });
 
     const navItems: NavItem[] = [
         {
@@ -55,6 +66,12 @@ export default async function StudentLayout({
             title: "คลังเอกสาร",
             href: "/documents",
             icon: <FolderOpen className="h-5 w-5" />,
+        },
+        {
+            title: "ข้อความ",
+            href: "/messages",
+            icon: <MessageSquare className="h-5 w-5" />,
+            badge: unreadMessages > 0 ? unreadMessages : undefined,
         },
     ];
 

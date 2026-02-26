@@ -65,7 +65,7 @@ export default async function AdminUserDetailPage({
         prisma.mandatoryActivityParticipation.findMany({
             where: { userId: id },
             include: { activity: true },
-            orderBy: { activity: { date: "desc" } },
+            orderBy: { activity: { createdAt: "desc" } },
         }),
         prisma.progressReport.findMany({
             where: { userId: id },
@@ -194,7 +194,7 @@ export default async function AdminUserDetailPage({
                         <div className="border rounded-md">
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="bg-slate-50">
+                                    <TableRow className="bg-slate-50 dark:bg-gray-800/80">
                                         <TableHead>ปีการศึกษา</TableHead>
                                         <TableHead>ภาคเรียน</TableHead>
                                         <TableHead>GPA</TableHead>
@@ -296,9 +296,6 @@ export default async function AdminUserDetailPage({
                                 <div key={p.id} className="p-3 flex items-center justify-between gap-3">
                                     <div className="space-y-0.5 flex-1 min-w-0">
                                         <p className="text-sm font-medium">{p.activity.title}</p>
-                                        {p.activity.date && (
-                                            <p className="text-xs text-muted-foreground">{formatDate(p.activity.date)}</p>
-                                        )}
                                     </div>
                                     <form action={async () => {
                                         "use server";
@@ -310,7 +307,7 @@ export default async function AdminUserDetailPage({
                                             size="sm"
                                             className={p.attended
                                                 ? "bg-green-600 hover:bg-green-700 text-white h-7 px-3 text-xs"
-                                                : "text-slate-500 border-slate-200 h-7 px-3 text-xs"
+                                                : "text-slate-500 dark:text-gray-400 border-slate-200 dark:border-gray-600 h-7 px-3 text-xs"
                                             }
                                         >
                                             {p.attended ? "✓ เข้าร่วมแล้ว" : "ยังไม่ได้เข้าร่วม"}
@@ -423,7 +420,7 @@ export default async function AdminUserDetailPage({
                                             )}
                                         </div>
                                         {report.reviewNote && (
-                                            <p className="text-xs text-slate-500 bg-slate-50 rounded px-2 py-1">
+                                            <p className="text-xs text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-gray-700/50 rounded px-2 py-1">
                                                 หมายเหตุ: {report.reviewNote}
                                             </p>
                                         )}

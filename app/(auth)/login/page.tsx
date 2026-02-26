@@ -96,9 +96,9 @@ export default function LoginPage() {
                 </div>
 
                 {/* Login Card */}
-                <Card className="w-full shadow-2xl shadow-amber-200/30 border-0 ring-1 ring-amber-200/80 bg-white/90 backdrop-blur-sm rounded-2xl">
+                <Card className="w-full shadow-2xl shadow-amber-200/30 border-0 ring-1 ring-amber-200/80 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl">
                     <CardHeader className="space-y-1 text-center pb-4">
-                        <CardTitle className="text-xl font-bold tracking-tight text-slate-800">เข้าสู่ระบบ</CardTitle>
+                        <CardTitle className="text-xl font-bold tracking-tight text-slate-800 dark:text-gray-200">เข้าสู่ระบบ</CardTitle>
                         <CardDescription className="text-sm text-muted-foreground">
                             จัดการประวัติและความก้าวหน้านิสิตทุน
                         </CardDescription>
@@ -107,7 +107,7 @@ export default function LoginPage() {
                         <LoginForm />
                     </CardContent>
                     <CardFooter className="flex flex-col items-center px-6 pb-6 pt-2">
-                        <div className="text-sm text-slate-500">
+                        <div className="text-sm text-slate-500 dark:text-gray-400">
                             ยังไม่มีบัญชี?{" "}
                             <Link href="/register" className="text-amber-700 hover:text-amber-800 font-semibold hover:underline transition-colors">
                                 ลงทะเบียน

@@ -1,26 +1,35 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { unstable_cache } from "next/cache";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatShortDate, formatFileSize } from "@/lib/utils";
 import { FileText, Download, FolderOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const getPublishedDocuments = unstable_cache(
-    () => prisma.document.findMany({
-        where: { isPublished: true },
-        orderBy: { createdAt: 'desc' },
-    }),
-    ["published-documents"],
-    { tags: ["documents"], revalidate: 3600 }
-);
-
 export default async function DocumentsPage() {
     const session = await auth();
     if (!session?.user?.id) redirect("/login");
 
-    const documents = await getPublishedDocuments();
+    // Get the student's scholarshipId
+    const profile = await prisma.studentProfile.findUnique({
+        where: { userId: session.user.id },
+        select: { scholarshipId: true },
+    });
+    const scholarshipId = profile?.scholarshipId ?? null;
+
+    // Show ALL-scope docs + docs targeting the student's specific scholarship
+    const documents = await prisma.document.findMany({
+        where: {
+            isPublished: true,
+            OR: [
+                { scholarshipScope: "ALL" },
+                ...(scholarshipId
+                    ? [{ scholarshipScope: "SPECIFIC" as const, scholarships: { some: { id: scholarshipId } } }]
+                    : []),
+            ],
+        },
+        orderBy: { createdAt: "desc" },
+    });
 
     return (
         <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-4xl mx-auto">
@@ -45,25 +54,25 @@ export default async function DocumentsPage() {
                 <CardContent>
                     {documents.length === 0 ? (
                         <div className="flex flex-col items-center py-14 gap-3">
-                            <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center">
-                                <FolderOpen className="w-8 h-8 text-slate-300" />
+                            <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-gray-700 flex items-center justify-center">
+                                <FolderOpen className="w-8 h-8 text-slate-300 dark:text-gray-500" />
                             </div>
-                            <p className="text-sm font-medium text-slate-400">ยังไม่มีเอกสารในระบบ</p>
+                            <p className="text-sm font-medium text-slate-400 dark:text-gray-500">ยังไม่มีเอกสารในระบบ</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {documents.map(doc => (
                                 <div key={doc.id}
-                                    className="group rounded-xl border border-slate-100 bg-white hover:shadow-md hover:border-blue-100 transition-all overflow-hidden flex flex-col">
+                                    className="group rounded-xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md hover:border-blue-100 dark:hover:border-blue-800/40 transition-all overflow-hidden flex flex-col">
                                     {/* Top accent */}
                                     <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-500" />
                                     <div className="p-4 flex flex-col flex-1 gap-3">
                                         <div className="flex items-start gap-3">
-                                            <div className="w-9 h-9 rounded-xl bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center flex-shrink-0 transition-colors">
+                                            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/30 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 flex items-center justify-center flex-shrink-0 transition-colors">
                                                 <FileText className="w-4 h-4 text-blue-500" />
                                             </div>
                                             <div className="space-y-1 flex-1 min-w-0">
-                                                <h4 className="font-semibold text-sm leading-snug line-clamp-2 text-slate-800" title={doc.title}>
+                                                <h4 className="font-semibold text-sm leading-snug line-clamp-2 text-slate-800 dark:text-gray-200" title={doc.title}>
                                                     {doc.title}
                                                 </h4>
                                                 {doc.category && (
@@ -74,7 +83,7 @@ export default async function DocumentsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between">
+                                        <div className="mt-auto pt-3 border-t border-slate-100 dark:border-gray-700 flex items-center justify-between">
                                             <div className="text-[10px] text-muted-foreground space-y-0.5">
                                                 <div>{doc.fileSizeBytes ? formatFileSize(doc.fileSizeBytes) : "—"}</div>
                                                 <div>{formatShortDate(doc.updatedAt)}</div>

@@ -62,7 +62,7 @@ export default async function VerifyEmailPage(
                                 <Button asChild variant="outline" className="w-full">
                                     <Link href="/register">ลงทะเบียนใหม่</Link>
                                 </Button>
-                                <p className="text-xs text-center text-slate-400">
+                                <p className="text-xs text-center text-slate-400 dark:text-gray-500">
                                     หากพบปัญหา กรุณาติดต่อผู้ดูแลระบบ
                                 </p>
                             </>

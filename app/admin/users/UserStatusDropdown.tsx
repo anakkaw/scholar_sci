@@ -59,7 +59,7 @@ export function UserStatusDropdown({ userId, currentStatus }: { userId: string, 
                 )}
 
                 {currentStatus !== "PENDING" && (
-                    <DropdownMenuItem onClick={() => handleStatusChange("PENDING")} className="text-slate-600 focus:text-slate-700">
+                    <DropdownMenuItem onClick={() => handleStatusChange("PENDING")} className="text-slate-600 dark:text-gray-300 focus:text-slate-700">
                         <RefreshCw className="h-4 w-4 mr-2" /> คืนสถานะรอพิจารณา
                     </DropdownMenuItem>
                 )}

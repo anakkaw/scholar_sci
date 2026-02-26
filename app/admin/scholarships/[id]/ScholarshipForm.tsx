@@ -215,7 +215,7 @@ export function ScholarshipForm({ initialData, scholarshipId }: ScholarshipFormP
                             </div>
                         ) : (
                             milestoneFields.map((field, index) => (
-                                <div key={field.id} className="relative border rounded-lg p-4 bg-amber-50 space-y-3 group">
+                                <div key={field.id} className="relative border rounded-lg p-4 bg-amber-50 dark:bg-amber-900/20 space-y-3 group">
                                     <Button
                                         type="button"
                                         variant="destructive"
@@ -309,7 +309,7 @@ export function ScholarshipForm({ initialData, scholarshipId }: ScholarshipFormP
                     </CardContent>
                 </Card>
 
-                <div className="flex justify-between items-center bg-white p-4 py-8 border-t border-slate-200 mt-8 sticky bottom-0 left-0 right-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 py-8 border-t border-slate-200 dark:border-gray-700 mt-8 sticky bottom-0 left-0 right-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                     {scholarshipId ? (
                         <Button
                             type="button"

@@ -5,23 +5,23 @@
 @layer base {
   :root {
     --background: 48 100% 99%;
-    --foreground: 26 60% 12%;
+    --foreground: 26 65% 7%;
     --card: 0 0% 100%;
-    --card-foreground: 26 60% 12%;
+    --card-foreground: 26 65% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 26 60% 12%;
-    --primary: 32 95% 44%;
+    --popover-foreground: 26 65% 7%;
+    --primary: 32 95% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 45 100% 95%;
-    --secondary-foreground: 26 60% 20%;
-    --muted: 45 60% 95%;
-    --muted-foreground: 26 30% 45%;
-    --accent: 45 100% 93%;
-    --accent-foreground: 32 95% 30%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 45 100% 94%;
+    --secondary-foreground: 26 65% 12%;
+    --muted: 45 60% 94%;
+    --muted-foreground: 26 30% 30%;
+    --accent: 45 100% 91%;
+    --accent-foreground: 32 95% 20%;
+    --destructive: 0 84.2% 56%;
     --destructive-foreground: 0 0% 98%;
-    --border: 38 40% 88%;
-    --input: 38 40% 88%;
+    --border: 38 35% 76%;
+    --input: 38 35% 76%;
     --ring: 38 92% 50%;
     --radius: 0.5rem;
     --chart-1: 32 95% 44%;
@@ -34,23 +34,23 @@
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 0 0% 5.5%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 0 0% 5.5%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
+    --primary: 32 90% 55%;
     --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --secondary: 0 0% 16%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 74%;
+    --accent: 0 0% 16%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 72% 40%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 32 90% 55%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -68,8 +68,8 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-size: 15px;
-    line-height: 1.6;
+    font-size: 16px;
+    line-height: 1.65;
   }
 
   h1, h2, h3, h4, h5, h6 {

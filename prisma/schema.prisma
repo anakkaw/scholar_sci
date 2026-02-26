@@ -82,6 +82,11 @@ enum AuditAction {
   ATTENDANCE_UPDATED
 }
 
+enum ThreadStatus {
+  OPEN
+  CLOSED
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // USER & AUTH
 // ─────────────────────────────────────────────────────────────────────────────
@@ -110,6 +115,8 @@ model User {
 
   mandatoryActivityParticipations MandatoryActivityParticipation[]
   passwordResetTokens             PasswordResetToken[]
+  messageThreads                  MessageThread[]                  @relation("StudentThreads")
+  sentMessages                    Message[]                        @relation("SentMessages")
 
   // NextAuth adapter tables
   accounts Account[]
@@ -262,12 +269,12 @@ model Achievement {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model MandatoryActivity {
-  id            String    @id @default(cuid())
+  id            String  @id @default(cuid())
   title         String
-  description   String?   @db.Text
-  date          DateTime?
-  scholarshipId String?   // null = all scholarships
-  yearLevel     Int?      // null = all year levels
+  description   String? @db.Text
+  scholarshipId String? // null = all scholarships
+  degreeLevel   String? // null = all degree levels e.g. ปริญญาตรี/ปริญญาโท/ปริญญาเอก
+  yearLevel     Int?    // null = all year levels
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -381,7 +388,6 @@ model Document {
   title           String
   category        String           // คู่มือ / แบบฟอร์ม / ประกาศ / อื่นๆ
   scholarshipScope ScholarshipScope @default(ALL)
-  scholarshipId   String?
   fileUrl         String
   fileName        String
   fileSizeBytes   Int
@@ -391,10 +397,45 @@ model Document {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  scholarship Scholarship? @relation(fields: [scholarshipId], references: [id])
+  scholarships Scholarship[]
 
   @@index([isPublished])
-  @@index([scholarshipScope, scholarshipId])
+  @@index([scholarshipScope])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────────────────────────────────────
+
+model MessageThread {
+  id            String       @id @default(cuid())
+  studentId     String
+  subject       String
+  status        ThreadStatus @default(OPEN)
+  lastMessageAt DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  student  User      @relation("StudentThreads", fields: [studentId], references: [id])
+  messages Message[]
+
+  @@index([studentId])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  threadId  String
+  senderId  String
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User          @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([threadId])
+  @@index([senderId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -55,7 +55,7 @@ export function ReportReviewButtons({ reportId, currentStatus }: Props) {
                 <Button
                     variant="outline"
                     size="sm"
-                    className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                    className="text-green-600 border-green-200 dark:border-green-800/40 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-700"
                     onClick={() => openDialog("REVIEWED")}
                 >
                     <CheckCircle className="h-3.5 w-3.5 mr-1" />
@@ -64,7 +64,7 @@ export function ReportReviewButtons({ reportId, currentStatus }: Props) {
                 <Button
                     variant="outline"
                     size="sm"
-                    className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
+                    className="text-amber-600 border-amber-200 dark:border-amber-800/30 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700"
                     onClick={() => openDialog("NEED_REVISION")}
                 >
                     <RotateCcw className="h-3.5 w-3.5 mr-1" />

@@ -29,9 +29,9 @@ export default function ForgotPasswordPage() {
                     <p className="text-amber-700/60 text-xs mt-0.5 tracking-wider uppercase font-medium">ระบบบริหารจัดการนิสิตทุน</p>
                 </div>
 
-                <Card className="w-full shadow-2xl shadow-amber-200/30 border-0 ring-1 ring-amber-200/80 bg-white/90 backdrop-blur-sm rounded-2xl">
+                <Card className="w-full shadow-2xl shadow-amber-200/30 border-0 ring-1 ring-amber-200/80 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl">
                     <CardHeader className="space-y-1 text-center pb-4">
-                        <CardTitle className="text-xl font-bold tracking-tight text-slate-800">ลืมรหัสผ่าน</CardTitle>
+                        <CardTitle className="text-xl font-bold tracking-tight text-slate-800 dark:text-gray-200">ลืมรหัสผ่าน</CardTitle>
                         <CardDescription className="text-sm text-muted-foreground">
                             รีเซ็ตรหัสผ่านผ่านอีเมลที่ลงทะเบียนไว้
                         </CardDescription>

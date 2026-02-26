@@ -56,7 +56,7 @@ export default async function ReportsPage() {
 
             {/* Progress summary */}
             {milestones.length > 0 && (
-                <div className="rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 px-5 py-4 space-y-3">
+                <div className="rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-100 dark:border-green-800/40 px-5 py-4 space-y-3">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-semibold text-green-900">ความคืบหน้าการส่งรายงาน</p>
@@ -75,11 +75,11 @@ export default async function ReportsPage() {
             {milestones.length === 0 ? (
                 <Card className="border-0 shadow-sm">
                     <CardContent className="flex flex-col items-center py-14 gap-3">
-                        <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center">
-                            <FileText className="w-8 h-8 text-slate-300" />
+                        <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-gray-700 flex items-center justify-center">
+                            <FileText className="w-8 h-8 text-slate-300 dark:text-gray-600" />
                         </div>
                         <div className="text-center">
-                            <p className="text-sm font-medium text-slate-500">ยังไม่มีการกำหนดรายงานสำหรับทุนนี้</p>
+                            <p className="text-sm font-medium text-slate-500 dark:text-gray-400">ยังไม่มีการกำหนดรายงานสำหรับทุนนี้</p>
                             <p className="text-xs text-muted-foreground mt-0.5">กรุณาติดต่อผู้ดูแลโครงการ</p>
                         </div>
                     </CardContent>
@@ -108,7 +108,7 @@ export default async function ReportsPage() {
 
                             return (
                                 <div key={milestone.id}
-                                    className={`relative rounded-xl overflow-hidden border transition-shadow hover:shadow-sm ${isDone ? "border-green-100 bg-green-50/30" : "border-slate-100 bg-white"}`}>
+                                    className={`relative rounded-xl overflow-hidden border transition-shadow hover:shadow-sm ${isDone ? "border-green-100 dark:border-green-800/40 bg-green-50/30 dark:bg-green-900/20" : "border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800"}`}>
                                     <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${isDone ? "from-green-400 to-emerald-500" : "from-amber-300 to-amber-400"}`} />
 
                                     <div className="pl-5 pr-4 py-4 space-y-3">
@@ -120,12 +120,12 @@ export default async function ReportsPage() {
                                                     {isDone ? "✓" : idx + 1}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <h4 className="font-semibold text-sm text-slate-800 leading-snug">{milestone.title}</h4>
+                                                    <h4 className="font-semibold text-sm text-slate-800 dark:text-gray-200 leading-snug">{milestone.title}</h4>
                                                     <p className="text-[11px] text-muted-foreground mt-0.5">
                                                         กำหนดส่ง: {YEAR_LABELS[milestone.targetYearLevel] ?? `ปี ${milestone.targetYearLevel}`} — {SEMESTER_LABELS[milestone.targetSemester] ?? `เทอม ${milestone.targetSemester}`}
                                                     </p>
                                                     {milestone.description && (
-                                                        <p className="text-[11px] text-slate-400 mt-0.5">{milestone.description}</p>
+                                                        <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-0.5">{milestone.description}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -143,30 +143,30 @@ export default async function ReportsPage() {
                                                     ส่งเมื่อ {formatDateTime(submission.submittedAt ?? submission.createdAt)}
                                                 </p>
                                                 {submission.summary && (
-                                                    <div className="bg-white border border-slate-100 rounded-lg px-3 py-2 text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                                                    <div className="bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 rounded-lg px-3 py-2 text-xs text-slate-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                                                         {submission.summary}
                                                     </div>
                                                 )}
                                                 {submission.reviewNote && (
-                                                    <div className="bg-amber-50 border border-amber-100 px-3 py-2 rounded-lg text-xs text-amber-800 leading-relaxed">
+                                                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 px-3 py-2 rounded-lg text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                                                         <span className="font-semibold">ข้อเสนอแนะ: </span>{submission.reviewNote}
                                                     </div>
                                                 )}
                                                 {submission.attachments.length > 0 && (
                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className="text-[11px] text-slate-400">ไฟล์แนบ:</span>
+                                                        <span className="text-[11px] text-slate-400 dark:text-gray-500">ไฟล์แนบ:</span>
                                                         {submission.attachments.map(att => (
                                                             <a key={att.id} href={att.fileUrl ?? "#"} target="_blank" rel="noreferrer"
-                                                                className="text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-lg inline-flex items-center gap-1">
+                                                                className="text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg inline-flex items-center gap-1">
                                                                 <DownloadCloud className="w-3 h-3" />
                                                                 {att.fileName ?? "ดาวน์โหลดไฟล์"}
                                                             </a>
                                                         ))}
                                                     </div>
                                                 )}
-                                                <div className="flex justify-end pt-1 border-t border-dashed border-slate-100">
+                                                <div className="flex justify-end pt-1 border-t border-dashed border-slate-100 dark:border-gray-700">
                                                     {isLocked ? (
-                                                        <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                                                        <div className="flex items-center gap-1 text-[11px] text-slate-400 dark:text-gray-500">
                                                             <Lock className="w-3 h-3" /> ล็อกแล้ว (ตรวจสอบแล้ว)
                                                         </div>
                                                     ) : (
@@ -174,7 +174,7 @@ export default async function ReportsPage() {
                                                             "use server";
                                                             await deleteReportAction(submission.id);
                                                         }}>
-                                                            <Button type="submit" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50 h-7 px-2 text-xs rounded-lg">
+                                                            <Button type="submit" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 h-7 px-2 text-xs rounded-lg">
                                                                 <Trash className="w-3 h-3 mr-1" /> ยกเลิกการส่ง
                                                             </Button>
                                                         </form>

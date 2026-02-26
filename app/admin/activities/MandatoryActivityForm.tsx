@@ -27,13 +27,15 @@ interface Scholarship {
     name: string;
 }
 
+const DEGREE_LEVELS = ["ปริญญาตรี", "ปริญญาโท", "ปริญญาเอก"];
+
 export function MandatoryActivityForm({ scholarships }: { scholarships: Scholarship[] }) {
     const [open, setOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [date, setDate] = useState("");
     const [scholarshipId, setScholarshipId] = useState<string>("");
+    const [degreeLevel, setDegreeLevel] = useState<string>("");
     const [yearLevel, setYearLevel] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
 
@@ -45,13 +47,13 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
             const result = await createMandatoryActivityAction({
                 title,
                 description,
-                date,
                 scholarshipId: (scholarshipId && scholarshipId !== "__all__") ? scholarshipId : undefined,
+                degreeLevel: (degreeLevel && degreeLevel !== "__all__") ? degreeLevel : undefined,
                 yearLevel: (yearLevel && yearLevel !== "__all__") ? parseInt(yearLevel) : undefined,
             });
             if (result.error) { setError(result.error); return; }
-            setTitle(""); setDescription(""); setDate("");
-            setScholarshipId(""); setYearLevel(""); setError(null);
+            setTitle(""); setDescription("");
+            setScholarshipId(""); setDegreeLevel(""); setYearLevel(""); setError(null);
             setOpen(false);
         });
     };
@@ -91,18 +93,10 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
                             rows={2}
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium">วันที่จัดกิจกรรม</label>
-                        <Input
-                            type="date"
-                            value={date}
-                            onChange={e => setDate(e.target.value)}
-                            disabled={isPending}
-                        />
-                    </div>
                     <div className="border-t pt-4 space-y-3">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">เงื่อนไขนิสิตที่ต้องเข้าร่วม</p>
-                        <div className="grid grid-cols-2 gap-3">
+                        <p className="text-[11px] text-muted-foreground -mt-1">หากไม่เลือกจะกำหนดให้นิสิตทุกกลุ่ม</p>
+                        <div className="grid grid-cols-1 gap-3">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium">ทุนการศึกษา</label>
                                 <Select value={scholarshipId} onValueChange={setScholarshipId} disabled={isPending}>
@@ -117,19 +111,35 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium">ชั้นปี</label>
-                                <Select value={yearLevel} onValueChange={setYearLevel} disabled={isPending}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="ทุกชั้นปี" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="__all__">ทุกชั้นปี</SelectItem>
-                                        {[1, 2, 3, 4, 5, 6].map(y => (
-                                            <SelectItem key={y} value={String(y)}>ปีที่ {y}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-medium">ระดับการศึกษา</label>
+                                    <Select value={degreeLevel} onValueChange={setDegreeLevel} disabled={isPending}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="ทุกระดับ" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="__all__">ทุกระดับ</SelectItem>
+                                            {DEGREE_LEVELS.map(d => (
+                                                <SelectItem key={d} value={d}>{d}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-medium">ชั้นปี</label>
+                                    <Select value={yearLevel} onValueChange={setYearLevel} disabled={isPending}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="ทุกชั้นปี" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="__all__">ทุกชั้นปี</SelectItem>
+                                            {[1, 2, 3, 4, 5, 6].map(y => (
+                                                <SelectItem key={y} value={String(y)}>ปีที่ {y}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </div>

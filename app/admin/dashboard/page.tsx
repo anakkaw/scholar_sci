@@ -44,7 +44,7 @@ function ComplianceBar({ submitted, total }: { submitted: number; total: number 
     const pct = total > 0 ? Math.round((submitted / total) * 100) : 0;
     return (
         <div className="space-y-1.5 mt-1">
-            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-slate-100 dark:bg-gray-700 overflow-hidden">
                 <div
                     className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all"
                     style={{ width: `${pct}%` }}
@@ -104,7 +104,7 @@ export default async function AdminDashboardPage() {
             Icon: Clock,
             svgColor: "#d97706",
             accentColor: "border-l-amber-400",
-            iconBg: "bg-amber-50",
+            iconBg: "bg-amber-50 dark:bg-amber-900/30",
             iconColor: "text-amber-500",
             numColor: "text-amber-700",
             linkColor: "text-amber-600 hover:text-amber-800",
@@ -117,7 +117,7 @@ export default async function AdminDashboardPage() {
             Icon: ClipboardList,
             svgColor: "#10b981",
             accentColor: "border-l-green-400",
-            iconBg: "bg-green-50",
+            iconBg: "bg-green-50 dark:bg-green-900/20",
             iconColor: "text-green-500",
             numColor: "text-green-700",
             linkColor: "text-green-600 hover:text-green-800",
@@ -130,7 +130,7 @@ export default async function AdminDashboardPage() {
             Icon: BookOpen,
             svgColor: "#3b82f6",
             accentColor: "border-l-blue-400",
-            iconBg: "bg-blue-50",
+            iconBg: "bg-blue-50 dark:bg-blue-900/30",
             iconColor: "text-blue-500",
             numColor: "text-blue-700",
             linkColor: "text-blue-600 hover:text-blue-800",
@@ -143,7 +143,7 @@ export default async function AdminDashboardPage() {
             Icon: Trophy,
             svgColor: "#8b5cf6",
             accentColor: "border-l-purple-400",
-            iconBg: "bg-purple-50",
+            iconBg: "bg-purple-50 dark:bg-purple-900/30",
             iconColor: "text-purple-500",
             numColor: "text-purple-700",
             linkColor: "text-purple-600 hover:text-purple-800",
@@ -191,22 +191,22 @@ export default async function AdminDashboardPage() {
                 {alertCards.map(({ label, value, Icon, svgColor, accentColor, iconBg, iconColor, numColor, linkColor, href, linkLabel }) => (
                     <Card key={label} className={`relative overflow-hidden shadow-sm transition-shadow hover:shadow-md ${
                         value > 0
-                            ? `border-0 ring-1 ring-inset ring-slate-200/80 border-t-2 ${accentColor.replace("border-l-", "border-t-")}`
-                            : "border border-slate-100"
+                            ? `border-0 ring-1 ring-inset ring-slate-200/80 dark:ring-gray-700 border-t-2 ${accentColor.replace("border-l-", "border-t-")}`
+                            : "border border-slate-100 dark:border-gray-700"
                     }`}>
                         <StatCardAccent color={svgColor} />
                         <CardContent className="p-4">
                             <div className="flex items-start justify-between gap-2 mb-2">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${value > 0 ? iconBg : "bg-slate-50"}`}>
-                                    <Icon className={`h-4 w-4 ${value > 0 ? iconColor : "text-slate-300"}`} />
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${value > 0 ? iconBg : "bg-slate-50 dark:bg-gray-700"}`}>
+                                    <Icon className={`h-4 w-4 ${value > 0 ? iconColor : "text-slate-300 dark:text-gray-600"}`} />
                                 </div>
                                 {value > 0 && (
                                     <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${iconBg} ${iconColor}`}>ใหม่</span>
                                 )}
                             </div>
-                            <div className={`text-2xl font-bold tracking-tight ${value > 0 ? numColor : "text-slate-200"}`}>{value}</div>
-                            <p className="text-xs text-slate-500 mt-0.5 leading-tight">{label}</p>
-                            <Link href={href} className={`text-[11px] mt-2 flex items-center gap-0.5 font-medium ${value > 0 ? linkColor : "text-slate-300 pointer-events-none"}`}>
+                            <div className={`text-2xl font-bold tracking-tight ${value > 0 ? numColor : "text-slate-200 dark:text-gray-600"}`}>{value}</div>
+                            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 leading-tight">{label}</p>
+                            <Link href={href} className={`text-[11px] mt-2 flex items-center gap-0.5 font-medium ${value > 0 ? linkColor : "text-slate-300 dark:text-gray-600 pointer-events-none"}`}>
                                 {linkLabel} <ArrowRight className="w-3 h-3" />
                             </Link>
                         </CardContent>
@@ -217,9 +217,9 @@ export default async function AdminDashboardPage() {
             {/* ── Compliance Section ── */}
             <div>
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="flex-1 h-px bg-slate-100" />
-                    <span className="text-[10px] font-semibold tracking-widest text-slate-400 uppercase px-1">สรุปการปฏิบัติตามเงื่อนไขทุน</span>
-                    <div className="flex-1 h-px bg-slate-100" />
+                    <div className="flex-1 h-px bg-slate-100 dark:bg-gray-700" />
+                    <span className="text-[10px] font-semibold tracking-widest text-slate-400 dark:text-gray-500 uppercase px-1">สรุปการปฏิบัติตามเงื่อนไขทุน</span>
+                    <div className="flex-1 h-px bg-slate-100 dark:bg-gray-700" />
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-3">
@@ -232,7 +232,7 @@ export default async function AdminDashboardPage() {
                             accent: "border-l-blue-400",
                             badgeColor: "text-blue-400/70",
                             numColor: "text-blue-700",
-                            iconBg: "bg-blue-50",
+                            iconBg: "bg-blue-50 dark:bg-blue-900/30",
                             iconColor: "text-blue-500",
                             note: null,
                         },
@@ -244,7 +244,7 @@ export default async function AdminDashboardPage() {
                             accent: "border-l-amber-400",
                             badgeColor: "text-amber-400/70",
                             numColor: "text-amber-700",
-                            iconBg: "bg-amber-50",
+                            iconBg: "bg-amber-50 dark:bg-amber-900/30",
                             iconColor: "text-amber-500",
                             note: "มีกิจกรรมอย่างน้อย 1 รายการ",
                         },
@@ -256,12 +256,12 @@ export default async function AdminDashboardPage() {
                             accent: "border-l-green-400",
                             badgeColor: "text-green-400/70",
                             numColor: "text-green-700",
-                            iconBg: "bg-green-50",
+                            iconBg: "bg-green-50 dark:bg-green-900/20",
                             iconColor: "text-green-500",
                             note: null,
                         },
                     ].map(({ label, badge, value, Icon, accent, badgeColor, numColor, iconBg, iconColor, note }) => (
-                        <Card key={label} className={`border border-slate-100 shadow-sm border-l-4 ${accent}`}>
+                        <Card key={label} className={`border border-slate-100 dark:border-gray-700 shadow-sm border-l-4 ${accent}`}>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 pl-4">
                                 <div>
                                     <p className={`text-[10px] font-semibold tracking-wider uppercase ${badgeColor}`}>{badge}</p>

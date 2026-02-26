@@ -7,6 +7,7 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     Dialog,
     DialogContent,
@@ -47,7 +48,7 @@ export function DocumentFormModal({ scholarships }: DocumentFormModalProps) {
             title: "",
             category: "คู่มือ",
             scholarshipScope: "ALL",
-            scholarshipId: "",
+            scholarshipIds: [],
             fileUrl: "",
             fileName: "",
             fileSizeBytes: 0,
@@ -55,6 +56,18 @@ export function DocumentFormModal({ scholarships }: DocumentFormModalProps) {
             isPublished: true,
         },
     });
+
+    const scope = form.watch("scholarshipScope");
+    const selectedIds = form.watch("scholarshipIds") ?? [];
+
+    const toggleScholarship = (id: string) => {
+        const current = form.getValues("scholarshipIds") ?? [];
+        form.setValue(
+            "scholarshipIds",
+            current.includes(id) ? current.filter(x => x !== id) : [...current, id],
+            { shouldValidate: true }
+        );
+    };
 
     const onSubmit = (data: DocumentFormValues) => {
         startTransition(async () => {
@@ -152,7 +165,10 @@ export function DocumentFormModal({ scholarships }: DocumentFormModalProps) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>ขอบเขตการเข้าถึง <span className="text-red-500">*</span></FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={(v) => {
+                                            field.onChange(v);
+                                            if (v === "ALL") form.setValue("scholarshipIds", []);
+                                        }} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="เลือกขอบเขต" />
@@ -160,7 +176,7 @@ export function DocumentFormModal({ scholarships }: DocumentFormModalProps) {
                                             </FormControl>
                                             <SelectContent>
                                                 <SelectItem value="ALL">นิสิตทุกคน</SelectItem>
-                                                <SelectItem value="SPECIFIC">เฉพาะทุน</SelectItem>
+                                                <SelectItem value="SPECIFIC">เฉพาะทุนที่เลือก</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -169,35 +185,34 @@ export function DocumentFormModal({ scholarships }: DocumentFormModalProps) {
                             />
                         </div>
 
-                        {form.watch("scholarshipScope") === "SPECIFIC" && (
-                            <FormField
-                                control={form.control}
-                                name="scholarshipId"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>ทุนการศึกษาที่เกี่ยวข้อง <span className="text-red-500">*</span></FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="เลือกทุนการศึกษา" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {scholarships.map(s => (
-                                                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
+                        {scope === "SPECIFIC" && (
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">ทุนการศึกษาที่เกี่ยวข้อง <span className="text-red-500">*</span></label>
+                                <div className="rounded-lg border border-input p-3 space-y-2">
+                                    {scholarships.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">ไม่มีทุนการศึกษาที่เปิดอยู่</p>
+                                    ) : (
+                                        scholarships.map(s => (
+                                            <label key={s.id} className="flex items-center gap-2.5 cursor-pointer">
+                                                <Checkbox
+                                                    checked={selectedIds.includes(s.id)}
+                                                    onCheckedChange={() => toggleScholarship(s.id)}
+                                                />
+                                                <span className="text-sm">{s.name}</span>
+                                            </label>
+                                        ))
+                                    )}
+                                </div>
+                                {selectedIds.length === 0 && (
+                                    <p className="text-xs text-destructive">กรุณาเลือกอย่างน้อย 1 ทุน</p>
                                 )}
-                            />
+                            </div>
                         )}
 
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">ไฟล์เอกสาร (PDF, Word, Excel, รูปภาพ ขนาดไม่เกิน 2MB) <span className="text-red-500">*</span></label>
                             {form.watch("fileUrl") ? (
-                                <div className="p-3 border rounded-md bg-slate-50 flex items-center justify-between">
+                                <div className="p-3 border rounded-md bg-slate-50 dark:bg-gray-700 flex items-center justify-between">
                                     <span className="text-sm truncate max-w-[300px]">{form.watch("fileName")}</span>
                                     <Button
                                         type="button"
@@ -247,7 +262,11 @@ export function DocumentFormModal({ scholarships }: DocumentFormModalProps) {
                             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
                                 ยกเลิก
                             </Button>
-                            <Button type="submit" className="bg-amber-700 hover:bg-amber-800" disabled={isPending || !form.watch("fileUrl")}>
+                            <Button
+                                type="submit"
+                                className="bg-amber-700 hover:bg-amber-800"
+                                disabled={isPending || !form.watch("fileUrl") || (scope === "SPECIFIC" && selectedIds.length === 0)}
+                            >
                                 {isPending ? "กำลังบันทึก..." : "บันทึกเอกสาร"}
                             </Button>
                         </div>

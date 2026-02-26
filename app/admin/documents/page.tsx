@@ -15,7 +15,7 @@ export default async function AdminDocumentsPage() {
     const [documents, scholarships] = await Promise.all([
         prisma.document.findMany({
             orderBy: { createdAt: 'desc' },
-            include: { scholarship: { select: { name: true } } }
+            include: { scholarships: { select: { id: true, name: true } } }
         }),
         prisma.scholarship.findMany({
             where: { active: true },
@@ -30,7 +30,7 @@ export default async function AdminDocumentsPage() {
                 <DocumentFormModal scholarships={scholarships} />
             </div>
 
-            <Card className="border-slate-200 shadow-sm">
+            <Card className="border-slate-200 dark:border-gray-700 shadow-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <FolderKanban className="h-5 w-5" />
@@ -41,10 +41,11 @@ export default async function AdminDocumentsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="border rounded-md">
+                    <div className="overflow-x-auto">
+                    <div className="border rounded-md min-w-[640px]">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-slate-50">
+                                <TableRow className="bg-slate-50 dark:bg-gray-700">
                                     <TableHead>ชื่อเอกสาร</TableHead>
                                     <TableHead>หมวดหมู่</TableHead>
                                     <TableHead>สำหรับ</TableHead>
@@ -66,19 +67,31 @@ export default async function AdminDocumentsPage() {
                                         <TableRow key={doc.id}>
                                             <TableCell className="font-medium max-w-[250px]">
                                                 <div className="flex items-center gap-2">
-                                                    <FileText className="h-4 w-4 text-slate-400 shrink-0" />
+                                                    <FileText className="h-4 w-4 text-slate-400 dark:text-gray-500 shrink-0" />
                                                     <Link href={doc.fileUrl} target="_blank" className="hover:underline truncate" title={doc.title}>
                                                         {doc.title}
                                                     </Link>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="font-normal bg-slate-50">
+                                                <Badge variant="outline" className="font-normal bg-slate-50 dark:bg-gray-700">
                                                     {doc.category}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate" title={doc.scholarship?.name || "ทุกคน"}>
-                                                {doc.scholarshipScope === "ALL" ? "ทุกคน" : doc.scholarship?.name}
+                                            <TableCell className="text-xs text-muted-foreground max-w-[160px]">
+                                                {doc.scholarshipScope === "ALL" ? (
+                                                    <span>ทุกคน</span>
+                                                ) : doc.scholarships.length === 0 ? (
+                                                    <span className="text-amber-600">ยังไม่ได้ระบุทุน</span>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {doc.scholarships.map(s => (
+                                                            <span key={s.id} className="inline-block bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40 rounded-full px-1.5 py-0 text-[10px] font-medium">
+                                                                {s.name}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground space-y-1">
                                                 <div>{doc.fileName.split('.').pop()?.toUpperCase()}</div>
@@ -98,6 +111,7 @@ export default async function AdminDocumentsPage() {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
                     </div>
                 </CardContent>
             </Card>
