@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect } from "react";
+import { useOptimistic, useState, useTransition, useRef, useEffect } from "react";
 import { replyToThreadAction, closeThreadAction, markThreadReadAction } from "@/actions/messages";
 import { Button } from "@/components/ui/button";
 import { Send, Lock } from "lucide-react";
@@ -16,6 +16,7 @@ export function ThreadActions({ threadId, isClosed }: ThreadActionsProps) {
     const [error, setError] = useState("");
     const [isPending, startTransition] = useTransition();
     const [isClosing, startCloseTransition] = useTransition();
+    const [optimisticClosed, setOptimisticClosed] = useOptimistic(isClosed);
     const bottomRef = useRef<HTMLDivElement>(null);
 
     // Mark messages as read on mount
@@ -26,24 +27,26 @@ export function ThreadActions({ threadId, isClosed }: ThreadActionsProps) {
 
     function handleReply() {
         if (!replyContent.trim()) return;
+        const content = replyContent.trim();
+        setReplyContent(""); // clear instantly
         setError("");
         startTransition(async () => {
-            const result = await replyToThreadAction({ threadId, content: replyContent.trim() });
+            const result = await replyToThreadAction({ threadId, content });
             if (result?.error) {
                 setError(result.error);
-            } else {
-                setReplyContent("");
+                setReplyContent(content); // restore on error
             }
         });
     }
 
     function handleClose() {
         startCloseTransition(async () => {
+            setOptimisticClosed(true); // instant close
             await closeThreadAction(threadId);
         });
     }
 
-    if (isClosed) {
+    if (optimisticClosed) {
         return (
             <div className="border-t border-border bg-muted/30 px-5 py-3">
                 <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -88,7 +91,7 @@ export function ThreadActions({ threadId, isClosed }: ThreadActionsProps) {
                     className={cn("rounded-xl gap-2 text-muted-foreground hover:text-destructive hover:border-destructive")}
                 >
                     <Lock className="h-3.5 w-3.5" />
-                    {isClosing ? "กำลังปิด..." : "ปิดสนทนา"}
+                    ปิดสนทนา
                 </Button>
             </div>
         </div>

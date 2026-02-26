@@ -78,7 +78,7 @@ export function AcademicForm({ enrollmentYear }: { enrollmentYear?: number | nul
                             <FormField control={form.control} name="semester" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>ภาคเรียน <span className="text-red-500">*</span></FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isPending}>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="เลือกภาคเรียน" /></SelectTrigger></FormControl>
                                         <SelectContent>
                                             {SEMESTERS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
@@ -90,7 +90,7 @@ export function AcademicForm({ enrollmentYear }: { enrollmentYear?: number | nul
                             <FormField control={form.control} name="academicYear" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>ปีการศึกษา (พ.ศ.) <span className="text-red-500">*</span></FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isPending}>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="เลือกปีการศึกษา" /></SelectTrigger></FormControl>
                                         <SelectContent>
                                             {academicYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
@@ -106,7 +106,7 @@ export function AcademicForm({ enrollmentYear }: { enrollmentYear?: number | nul
                                 <FormItem>
                                     <FormLabel>GPA ภาคเรียนนี้ <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
-                                        <Input type="number" step="0.01" min="0" max="4" placeholder="เช่น 3.25" disabled={isPending} {...field} />
+                                        <Input type="number" step="0.01" min="0" max="4" placeholder="เช่น 3.25" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -115,7 +115,7 @@ export function AcademicForm({ enrollmentYear }: { enrollmentYear?: number | nul
                                 <FormItem>
                                     <FormLabel>GPAX สะสม <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
-                                        <Input type="number" step="0.01" min="0" max="4" placeholder="เช่น 3.40" disabled={isPending} {...field} />
+                                        <Input type="number" step="0.01" min="0" max="4" placeholder="เช่น 3.40" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -126,7 +126,7 @@ export function AcademicForm({ enrollmentYear }: { enrollmentYear?: number | nul
                             <label className="text-sm font-medium leading-none">
                                 แนบ Transcript (PDF) <span className="text-red-500">*</span>
                             </label>
-                            <FileUpload onUpload={handleUploadFile} disabled={isPending} accept=".pdf,.jpg,.jpeg,.png"
+                            <FileUpload onUpload={handleUploadFile} accept=".pdf,.jpg,.jpeg,.png"
                                 currentFileName={form.watch("transcriptName")} currentFileUrl={form.watch("transcriptUrl")} />
                             {form.formState.errors.transcriptUrl && (
                                 <p className="text-sm text-red-500">{form.formState.errors.transcriptUrl.message}</p>
@@ -134,7 +134,7 @@ export function AcademicForm({ enrollmentYear }: { enrollmentYear?: number | nul
                         </div>
 
                         <div className="pt-4 flex justify-end space-x-2">
-                            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>ยกเลิก</Button>
+                            <Button type="button" variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
                             <Button type="submit" disabled={isPending}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {isPending ? "กำลังบันทึก..." : "บันทึกผลการเรียน"}

@@ -163,7 +163,7 @@ export function AchievementForm() {
                         <FormField control={form.control} name="type" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>ประเภทผลงาน <span className="text-red-500">*</span></FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value} disabled={isPending}>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger><SelectValue placeholder="เลือกประเภทผลงาน" /></SelectTrigger>
                                     </FormControl>
@@ -194,7 +194,6 @@ export function AchievementForm() {
                                 <FormControl>
                                     <Input
                                         placeholder={cfg?.titlePlaceholder ?? "ชื่อผลงานหรือกิจกรรม"}
-                                        disabled={isPending}
                                         {...field}
                                     />
                                 </FormControl>
@@ -210,7 +209,6 @@ export function AchievementForm() {
                                     <Textarea
                                         placeholder={cfg?.descPlaceholder ?? "รายละเอียดเพิ่มเติม"}
                                         className="resize-none min-h-[80px]"
-                                        disabled={isPending}
                                         {...field}
                                     />
                                 </FormControl>
@@ -224,7 +222,7 @@ export function AchievementForm() {
                                 <FormItem>
                                     <FormLabel>{cfg?.dateLabel ?? "วันที่"}</FormLabel>
                                     <FormControl>
-                                        <Input type="date" disabled={isPending} {...field} />
+                                        <Input type="date" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -235,7 +233,6 @@ export function AchievementForm() {
                                     <FormControl>
                                         <Input
                                             placeholder={cfg?.coAuthorsPlaceholder ?? "ชื่อผู้เกี่ยวข้อง"}
-                                            disabled={isPending}
                                             {...field}
                                         />
                                     </FormControl>
@@ -252,7 +249,6 @@ export function AchievementForm() {
                                     <Input
                                         type="url"
                                         placeholder={cfg?.urlPlaceholder ?? "https://"}
-                                        disabled={isPending}
                                         {...field}
                                     />
                                 </FormControl>
@@ -265,14 +261,13 @@ export function AchievementForm() {
                             <label className="text-sm font-medium leading-none">แนบไฟล์หลักฐานประกอบ (ถ้ามี)</label>
                             <FileUpload
                                 onUpload={handleUploadFile}
-                                disabled={isPending}
                                 currentFileName={form.watch("attachmentName")}
                                 currentFileUrl={form.watch("attachmentUrl")}
                             />
                         </div>
 
                         <div className="pt-2 flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
+                            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                                 ยกเลิก
                             </Button>
                             <Button type="submit" disabled={isPending} className="bg-amber-700 hover:bg-amber-800">

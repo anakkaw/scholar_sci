@@ -199,7 +199,7 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                                 ชื่อ-นามสกุล <span className="text-red-500">*</span>
                                             </FormLabel>
                                             <FormControl>
-                                                <Input disabled={isPending} placeholder="นายเรียนดี ทุนสร้างชาติ" {...field} />
+                                                <Input placeholder="นายเรียนดี ทุนสร้างชาติ" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -213,7 +213,7 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                         <FormItem>
                                             <FormLabel>ชื่อเล่น</FormLabel>
                                             <FormControl>
-                                                <Input disabled={isPending} placeholder="เช่น บอล, ปลา" {...field} />
+                                                <Input placeholder="เช่น บอล, ปลา" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -227,7 +227,7 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                         <FormItem>
                                             <FormLabel>เบอร์โทรศัพท์</FormLabel>
                                             <FormControl>
-                                                <Input disabled={isPending} placeholder="08x-xxx-xxxx" {...field} />
+                                                <Input placeholder="08x-xxx-xxxx" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -241,7 +241,7 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                         <FormItem>
                                             <FormLabel>อีเมลสำรอง</FormLabel>
                                             <FormControl>
-                                                <Input type="email" disabled={isPending} placeholder="example@gmail.com" {...field} />
+                                                <Input type="email" placeholder="example@gmail.com" {...field} />
                                             </FormControl>
                                             <FormDescription className="text-xs">
                                                 นอกเหนือจากอีเมลมหาวิทยาลัย
@@ -258,7 +258,7 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                         <FormItem className="md:col-span-2">
                                             <FormLabel>ที่อยู่ปัจจุบัน</FormLabel>
                                             <FormControl>
-                                                <Textarea disabled={isPending} rows={3} placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์" {...field} />
+                                                <Textarea rows={3} placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -283,7 +283,6 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    disabled={isPending}
                                                     placeholder="เช่น 68053127"
                                                     maxLength={10}
                                                     {...field}
@@ -323,7 +322,6 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                         <FormItem>
                                             <FormLabel>ระดับการศึกษา</FormLabel>
                                             <Select
-                                                disabled={isPending}
                                                 onValueChange={field.onChange}
                                                 value={field.value || ""}
                                             >
@@ -352,7 +350,6 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                         <FormItem>
                                             <FormLabel>ภาควิชา</FormLabel>
                                             <Select
-                                                disabled={isPending}
                                                 onValueChange={field.onChange}
                                                 value={field.value || ""}
                                             >
@@ -382,7 +379,6 @@ export function ProfileForm({ userProfile }: ProfileFormProps) {
                                             <FormLabel>สาขาวิชา</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    disabled={isPending}
                                                     placeholder="เช่น วิทยาศาสตร์คณิตศาสตร์, เคมีประยุกต์"
                                                     {...field}
                                                 />

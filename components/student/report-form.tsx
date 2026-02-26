@@ -91,7 +91,7 @@ export function ReportForm({ milestoneId, milestoneTitle, triggerLabel }: Report
                                 <FormField control={form.control} name="semester" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>ภาคเรียน <span className="text-red-500">*</span></FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isPending}>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="เลือกภาคเรียน" /></SelectTrigger></FormControl>
                                             <SelectContent>
                                                 {SEMESTERS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
@@ -103,7 +103,7 @@ export function ReportForm({ milestoneId, milestoneTitle, triggerLabel }: Report
                                 <FormField control={form.control} name="academicYear" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>ปีการศึกษา (พ.ศ.) <span className="text-red-500">*</span></FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isPending}>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="เลือกปีการศึกษา" /></SelectTrigger></FormControl>
                                             <SelectContent>
                                                 {academicYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
@@ -118,20 +118,20 @@ export function ReportForm({ milestoneId, milestoneTitle, triggerLabel }: Report
                         <FormField control={form.control} name="summary" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>สรุปความคืบหน้า / เนื้อหารายงาน <span className="text-red-500">*</span></FormLabel>
-                                <FormControl><Textarea rows={5} placeholder="อธิบายรายละเอียดของรายงาน..." disabled={isPending} {...field} /></FormControl>
+                                <FormControl><Textarea rows={5} placeholder="อธิบายรายละเอียดของรายงาน..." {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
 
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">ไฟล์แนบรายงาน (PDF, Word)</label>
-                            <FileUpload onUpload={handleUploadFile} disabled={isPending}
+                            <FileUpload onUpload={handleUploadFile}
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip"
                                 currentFileName={form.watch("attachmentName")} currentFileUrl={form.watch("attachmentUrl")} />
                         </div>
 
                         <div className="pt-4 flex justify-end space-x-2">
-                            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>ยกเลิก</Button>
+                            <Button type="button" variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
                             <Button type="submit" disabled={isPending}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {isPending ? "กำลังบันทึก..." : "ส่งรายงาน"}

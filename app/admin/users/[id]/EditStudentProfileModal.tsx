@@ -149,7 +149,7 @@ export function EditStudentProfileModal({
                                                 ชื่อ-นามสกุล <span className="text-red-500">*</span>
                                             </FormLabel>
                                             <FormControl>
-                                                <Input disabled={isPending} {...field} />
+                                                <Input {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -163,7 +163,7 @@ export function EditStudentProfileModal({
                                         <FormItem>
                                             <FormLabel>ชื่อเล่น</FormLabel>
                                             <FormControl>
-                                                <Input disabled={isPending} placeholder="เช่น บอล, ปลา" {...field} />
+                                                <Input placeholder="เช่น บอล, ปลา" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -177,7 +177,7 @@ export function EditStudentProfileModal({
                                         <FormItem>
                                             <FormLabel>เบอร์โทรศัพท์</FormLabel>
                                             <FormControl>
-                                                <Input disabled={isPending} placeholder="08x-xxx-xxxx" {...field} />
+                                                <Input placeholder="08x-xxx-xxxx" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -191,7 +191,7 @@ export function EditStudentProfileModal({
                                         <FormItem>
                                             <FormLabel>อีเมลสำรอง</FormLabel>
                                             <FormControl>
-                                                <Input type="email" disabled={isPending} placeholder="example@gmail.com" {...field} />
+                                                <Input type="email" placeholder="example@gmail.com" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -206,7 +206,6 @@ export function EditStudentProfileModal({
                                             <FormLabel>ที่อยู่ปัจจุบัน</FormLabel>
                                             <FormControl>
                                                 <Textarea
-                                                    disabled={isPending}
                                                     rows={2}
                                                     placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"
                                                     {...field}
@@ -235,7 +234,6 @@ export function EditStudentProfileModal({
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    disabled={isPending}
                                                     placeholder="เช่น 68053127"
                                                     maxLength={10}
                                                     {...field}
@@ -272,7 +270,6 @@ export function EditStudentProfileModal({
                                         <FormItem className="sm:col-span-2">
                                             <FormLabel>สาขาวิชา (ภาควิชา)</FormLabel>
                                             <Select
-                                                disabled={isPending}
                                                 onValueChange={field.onChange}
                                                 value={field.value || ""}
                                             >
@@ -300,7 +297,6 @@ export function EditStudentProfileModal({
                             <Button
                                 type="button"
                                 variant="outline"
-                                disabled={isPending}
                                 onClick={() => setOpen(false)}
                             >
                                 ยกเลิก

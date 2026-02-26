@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatDateTime, formatDate } from "@/lib/utils";
@@ -48,10 +48,16 @@ export function MessagesPanel({ threads, selectedThread, currentUserId }: Messag
     const [isPending, startTransition] = useTransition();
     const bottomRef = useRef<HTMLDivElement>(null);
 
-    // Scroll to bottom when messages change
+    // Optimistic messages — instantly append bubble before server confirms
+    const [optimisticMessages, addOptimisticMessage] = useOptimistic<Message[], Message>(
+        selectedThread?.messages ?? [],
+        (state, newMsg) => [...state, newMsg]
+    );
+
+    // Scroll to bottom when messages change (including optimistic)
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [selectedThread?.messages.length]);
+    }, [optimisticMessages.length]);
 
     // Mark messages as read when thread is opened
     useEffect(() => {
@@ -66,13 +72,22 @@ export function MessagesPanel({ threads, selectedThread, currentUserId }: Messag
 
     function handleReply() {
         if (!replyContent.trim() || !selectedThread) return;
+        const content = replyContent.trim();
+        setReplyContent(""); // clear instantly
         setReplyError("");
         startTransition(async () => {
-            const result = await replyToThreadAction({ threadId: selectedThread.id, content: replyContent.trim() });
+            addOptimisticMessage({
+                id: `optimistic-${Date.now()}`,
+                content,
+                senderId: currentUserId,
+                isRead: false,
+                createdAt: new Date(),
+                sender: { role: "STUDENT" },
+            });
+            const result = await replyToThreadAction({ threadId: selectedThread.id, content });
             if (result?.error) {
                 setReplyError(result.error);
-            } else {
-                setReplyContent("");
+                setReplyContent(content); // restore on error
             }
         });
     }
@@ -172,11 +187,12 @@ export function MessagesPanel({ threads, selectedThread, currentUserId }: Messag
                             </Badge>
                         </div>
 
-                        {/* Messages */}
+                        {/* Messages — renders optimistic list for instant bubble */}
                         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                            {selectedThread.messages.map((msg) => {
+                            {optimisticMessages.map((msg) => {
                                 const isOwn = msg.senderId === currentUserId;
                                 const isAdmin = msg.sender.role === "ADMIN";
+                                const isOptimistic = msg.id.startsWith("optimistic-");
                                 return (
                                     <div key={msg.id} className={cn("flex gap-3", isOwn ? "flex-row-reverse" : "flex-row")}>
                                         <Avatar className="h-8 w-8 flex-shrink-0 border-2 border-amber-100 dark:border-amber-900/50">
@@ -194,10 +210,11 @@ export function MessagesPanel({ threads, selectedThread, currentUserId }: Messag
                                                 </span>
                                             </div>
                                             <div className={cn(
-                                                "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                                                "rounded-2xl px-4 py-2.5 text-sm leading-relaxed transition-opacity",
                                                 isOwn
                                                     ? "rounded-tr-sm bg-amber-500 text-white"
                                                     : "rounded-tl-sm bg-muted text-foreground",
+                                                isOptimistic && "opacity-70",
                                             )}>
                                                 {msg.content}
                                             </div>

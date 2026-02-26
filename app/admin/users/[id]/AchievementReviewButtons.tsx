@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { reviewAchievementAction } from "@/actions/admin";
 
 interface Props {
@@ -25,31 +25,31 @@ export function AchievementReviewButtons({ achievementId, currentStatus }: Props
     const [dialogOpen, setDialogOpen] = useState(false);
     const [pendingStatus, setPendingStatus] = useState<"VERIFIED" | "REJECTED" | null>(null);
     const [note, setNote] = useState("");
-    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [errorMsg, setErrorMsg] = useState("");
+    const [optimisticStatus, setOptimisticStatus] = useOptimistic(currentStatus);
 
     const openDialog = (status: "VERIFIED" | "REJECTED") => {
         setPendingStatus(status);
         setNote("");
-        setMessage(null);
+        setErrorMsg("");
         setDialogOpen(true);
     };
 
     const handleConfirm = () => {
         if (!pendingStatus) return;
+        const chosen = pendingStatus;
+        setDialogOpen(false); // close immediately — optimistic
         startTransition(async () => {
-            const result = await reviewAchievementAction(achievementId, pendingStatus, note || undefined);
-            if (result.success) {
-                setMessage({ type: "success", text: result.success });
-                setTimeout(() => setDialogOpen(false), 1000);
-            } else {
-                setMessage({ type: "error", text: result.error ?? "เกิดข้อผิดพลาด" });
+            setOptimisticStatus(chosen);
+            const result = await reviewAchievementAction(achievementId, chosen, note || undefined);
+            if (result.error) {
+                setErrorMsg(result.error);
+                setDialogOpen(true); // reopen with error
             }
         });
     };
 
-    if (currentStatus === "VERIFIED") {
-        return null;
-    }
+    if (optimisticStatus === "VERIFIED") return null;
 
     return (
         <>
@@ -57,6 +57,7 @@ export function AchievementReviewButtons({ achievementId, currentStatus }: Props
                 <Button
                     variant="outline"
                     size="sm"
+                    disabled={isPending}
                     className="text-green-600 border-green-200 dark:border-green-800/40 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-700"
                     onClick={() => openDialog("VERIFIED")}
                 >
@@ -66,6 +67,7 @@ export function AchievementReviewButtons({ achievementId, currentStatus }: Props
                 <Button
                     variant="outline"
                     size="sm"
+                    disabled={isPending}
                     className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                     onClick={() => openDialog("REJECTED")}
                 >
@@ -98,22 +100,18 @@ export function AchievementReviewButtons({ achievementId, currentStatus }: Props
                                 rows={3}
                             />
                         </div>
-                        {message && (
-                            <p className={`text-sm ${message.type === "success" ? "text-green-600" : "text-red-600"}`}>
-                                {message.text}
-                            </p>
+                        {errorMsg && (
+                            <p className="text-sm text-red-600">{errorMsg}</p>
                         )}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDialogOpen(false)}>ยกเลิก</Button>
                         <Button
-                            disabled={isPending}
                             onClick={handleConfirm}
                             className={pendingStatus === "VERIFIED"
                                 ? "bg-green-600 hover:bg-green-700"
                                 : "bg-red-600 hover:bg-red-700"}
                         >
-                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {pendingStatus === "VERIFIED" ? "ยืนยัน" : "ปฏิเสธ"}
                         </Button>
                     </DialogFooter>

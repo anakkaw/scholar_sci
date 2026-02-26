@@ -1,7 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
-import { CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { useOptimistic, useTransition } from "react";
+import { CheckCircle2, Clock } from "lucide-react";
 import { updateAttendanceAction } from "@/actions/admin";
 import { cn } from "@/lib/utils";
 
@@ -13,12 +13,13 @@ interface Props {
 
 export function AttendanceToggleButton({ participationId, userId, attended }: Props) {
     const [isPending, startTransition] = useTransition();
+    const [optimisticAttended, setOptimisticAttended] = useOptimistic(attended);
 
-    const toggle = () => {
+    const toggle = () =>
         startTransition(async () => {
+            setOptimisticAttended(!attended);
             await updateAttendanceAction(participationId, !attended, userId);
         });
-    };
 
     return (
         <button
@@ -26,19 +27,17 @@ export function AttendanceToggleButton({ participationId, userId, attended }: Pr
             disabled={isPending}
             className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition-all border",
-                attended
+                optimisticAttended
                     ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800/40 hover:bg-green-100 dark:hover:bg-green-900/50"
                     : "bg-slate-50 dark:bg-gray-700 text-slate-500 dark:text-gray-400 border-slate-200 dark:border-gray-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-700 dark:hover:text-amber-300 hover:border-amber-200",
-                isPending && "opacity-50 cursor-not-allowed"
+                isPending && "opacity-60 cursor-not-allowed"
             )}
         >
-            {isPending
-                ? <Loader2 className="w-3 h-3 animate-spin" />
-                : attended
-                    ? <CheckCircle2 className="w-3 h-3" />
-                    : <Clock className="w-3 h-3" />
+            {optimisticAttended
+                ? <CheckCircle2 className="w-3 h-3" />
+                : <Clock className="w-3 h-3" />
             }
-            {attended ? "เข้าร่วมแล้ว" : "ยังไม่ได้เข้าร่วม"}
+            {optimisticAttended ? "เข้าร่วมแล้ว" : "ยังไม่ได้เข้าร่วม"}
         </button>
     );
 }

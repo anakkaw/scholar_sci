@@ -80,7 +80,6 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
                             placeholder="เช่น อบรม Research Methodology 2569"
                             value={title}
                             onChange={e => setTitle(e.target.value)}
-                            disabled={isPending}
                         />
                     </div>
                     <div className="space-y-1.5">
@@ -89,7 +88,6 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
                             placeholder="รายละเอียดกิจกรรม..."
                             value={description}
                             onChange={e => setDescription(e.target.value)}
-                            disabled={isPending}
                             rows={2}
                         />
                     </div>
@@ -99,7 +97,7 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
                         <div className="grid grid-cols-1 gap-3">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium">ทุนการศึกษา</label>
-                                <Select value={scholarshipId} onValueChange={setScholarshipId} disabled={isPending}>
+                                <Select value={scholarshipId} onValueChange={setScholarshipId}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="ทุกทุน" />
                                     </SelectTrigger>
@@ -114,7 +112,7 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-medium">ระดับการศึกษา</label>
-                                    <Select value={degreeLevel} onValueChange={setDegreeLevel} disabled={isPending}>
+                                    <Select value={degreeLevel} onValueChange={setDegreeLevel}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="ทุกระดับ" />
                                         </SelectTrigger>
@@ -128,7 +126,7 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-medium">ชั้นปี</label>
-                                    <Select value={yearLevel} onValueChange={setYearLevel} disabled={isPending}>
+                                    <Select value={yearLevel} onValueChange={setYearLevel}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="ทุกชั้นปี" />
                                         </SelectTrigger>
@@ -145,7 +143,7 @@ export function MandatoryActivityForm({ scholarships }: { scholarships: Scholars
                     </div>
                     {error && <p className="text-sm text-red-600">{error}</p>}
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
+                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             ยกเลิก
                         </Button>
                         <Button type="submit" disabled={isPending}>
