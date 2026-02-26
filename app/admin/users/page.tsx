@@ -4,10 +4,9 @@ import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { formatShortDate } from "@/lib/utils";
-import { USER_STATUS_LABELS } from "@/types/index";
 import { UserStatusDropdown } from "./UserStatusDropdown";
+import { QuickApproveButton } from "./QuickApproveButton";
 import { UserSearchInput } from "./UserSearchInput";
 import { Suspense } from "react";
 import { Eye, Users } from "lucide-react";
@@ -158,26 +157,30 @@ export default async function AdminUsersPage(
                                     </TableRow>
                                 ) : users.map(user => {
                                     const profile = user.studentProfile;
-                                    const statusInfo = USER_STATUS_LABELS[user.status] || { label: user.status, color: "gray" };
                                     return (
                                         <TableRow key={user.id} className="border-b border-slate-50 dark:border-gray-700 hover:bg-amber-50/30 dark:hover:bg-amber-900/20 transition-colors">
                                             <TableCell className="text-xs font-medium text-slate-600 dark:text-gray-300 pl-5">
                                                 {profile?.studentIdCode || <span className="text-slate-300 dark:text-gray-600">—</span>}
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex items-center gap-2.5">
-                                                    <Avatar className="h-8 w-8 border border-amber-100 flex-shrink-0">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-10 w-10 border-2 border-amber-100 dark:border-amber-800/40 flex-shrink-0 shadow-sm">
                                                         <AvatarImage
-                                                            src={user.image || profile?.profileImageUrl || ""}
+                                                            src={profile?.profileImageUrl || user.image || ""}
                                                             alt={profile?.fullName || user.email || ""}
                                                         />
-                                                        <AvatarFallback className="bg-amber-100 text-amber-700 text-xs font-bold">
+                                                        <AvatarFallback className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-sm font-bold">
                                                             {(profile?.fullName || user.email || "U").charAt(0).toUpperCase()}
                                                         </AvatarFallback>
                                                     </Avatar>
-                                                    <span className="text-sm font-medium text-slate-700 dark:text-gray-200">
-                                                        {profile?.fullName || <span className="text-slate-400 dark:text-gray-500">ยังไม่ระบุ</span>}
-                                                    </span>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-slate-700 dark:text-gray-200 truncate">
+                                                            {profile?.fullName || <span className="text-slate-400 dark:text-gray-500">ยังไม่ระบุ</span>}
+                                                        </p>
+                                                        {profile?.nickname && (
+                                                            <p className="text-[11px] text-muted-foreground truncate">({profile.nickname})</p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">{user.email}</TableCell>
@@ -190,9 +193,8 @@ export default async function AdminUsersPage(
                                                 {formatShortDate(user.createdAt)}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={statusInfo.color as any} className="text-[10px]">
-                                                    {statusInfo.label}
-                                                </Badge>
+                                                {/* PENDING badge is clickable → approve in one tap */}
+                                                <QuickApproveButton userId={user.id} currentStatus={user.status} />
                                             </TableCell>
                                             <TableCell className="text-right pr-5">
                                                 <div className="flex items-center justify-end gap-1">

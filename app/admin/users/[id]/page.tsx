@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import {
@@ -30,6 +30,7 @@ import {
     MapPin,
     ExternalLink,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDateTime, formatDate } from "@/lib/utils";
 import { USER_STATUS_LABELS, ACHIEVEMENT_TYPES, ACADEMIC_RECORD_STATUS_LABELS, REPORT_STATUS_LABELS } from "@/types/index";
 import { GpaEditModal } from "./GpaEditModal";
@@ -44,7 +45,7 @@ export default async function AdminUserDetailPage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) redirect("/login");
 
     const [student, participations, progressReports] = await Promise.all([
@@ -83,18 +84,29 @@ export default async function AdminUserDetailPage({
     return (
         <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
             {/* Header */}
-            <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" asChild>
+            <div className="flex items-center gap-3 flex-wrap">
+                <Button variant="ghost" size="sm" asChild className="flex-shrink-0">
                     <Link href="/admin/users">
                         <ArrowLeft className="h-4 w-4 mr-1" />
                         กลับ
                     </Link>
                 </Button>
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">
-                        {profile?.fullName ?? "ไม่ระบุชื่อ"}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">{student.email}</p>
+                <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-14 w-14 border-2 border-amber-200 dark:border-amber-700 shadow-sm flex-shrink-0">
+                        <AvatarImage
+                            src={profile?.profileImageUrl || student.image || ""}
+                            alt={profile?.fullName || student.email || ""}
+                        />
+                        <AvatarFallback className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xl font-bold">
+                            {(profile?.fullName || student.email || "U").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                        <h2 className="text-2xl font-bold tracking-tight truncate">
+                            {profile?.fullName ?? "ไม่ระบุชื่อ"}
+                        </h2>
+                        <p className="text-sm text-muted-foreground truncate">{student.email}</p>
+                    </div>
                 </div>
             </div>
 
@@ -123,6 +135,27 @@ export default async function AdminUserDetailPage({
                     </div>
                 </CardHeader>
                 <CardContent>
+                    {/* Profile photo (if uploaded via profile settings) */}
+                    {(profile?.profileImageUrl || student.image) && (
+                        <div className="mb-5 flex items-center gap-4 pb-5 border-b border-slate-100 dark:border-gray-700">
+                            <Avatar className="h-20 w-20 border-2 border-amber-100 dark:border-amber-800/40 shadow">
+                                <AvatarImage
+                                    src={profile?.profileImageUrl || student.image || ""}
+                                    alt={profile?.fullName || student.email || ""}
+                                />
+                                <AvatarFallback className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 text-2xl font-bold">
+                                    {(profile?.fullName || student.email || "U").charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold text-slate-700 dark:text-gray-200">{profile?.fullName}</p>
+                                {profile?.nickname && <p className="text-sm text-muted-foreground">({profile.nickname})</p>}
+                                <Badge variant={statusInfo.color as never} className="mt-1">
+                                    {statusInfo.label}
+                                </Badge>
+                            </div>
+                        </div>
+                    )}
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <InfoRow label="รหัสนิสิต" value={profile?.studentIdCode ?? "-"} />
                         <InfoRow label="ชื่อ-นามสกุล" value={profile?.fullName ?? "-"} />
