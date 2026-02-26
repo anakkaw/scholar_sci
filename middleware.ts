@@ -1,27 +1,19 @@
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 
-export default async function middleware(req: NextRequest) {
-    const pathname = req.nextUrl.pathname;
+const { auth } = NextAuth(authConfig);
 
-    // Determine correct cookie name for next-auth v5
-    // Production (HTTPS) uses __Secure- prefix, localhost uses plain name
-    const isSecure = req.nextUrl.protocol === "https:";
-    const cookieName = isSecure
-        ? "__Secure-authjs.session-token"
-        : "authjs.session-token";
-
-    // Read JWT token directly (Edge-compatible via jose)
-    const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-    const token = await getToken({ req, secret, cookieName, salt: cookieName });
-    const isLoggedIn = !!token;
+export default auth((req) => {
+    const { nextUrl, auth: session } = req;
+    const isLoggedIn = !!session;
+    const pathname = nextUrl.pathname;
 
     // Public routes that don't need auth
     const publicRoutes = ["/login", "/register", "/select-scholarship", "/verify-email", "/forgot-password", "/reset-password"];
     if (publicRoutes.some((r) => pathname.startsWith(r))) {
         if (isLoggedIn && (pathname === "/login" || pathname === "/register")) {
-            const role = token.role as string;
+            const role = session.user.role;
             return NextResponse.redirect(
                 new URL(role === "ADMIN" ? "/admin/dashboard" : "/dashboard", req.url)
             );
@@ -34,9 +26,9 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(pathname)}`, req.url));
     }
 
-    const role = token.role as string;
-    const status = token.status as string;
-    const scholarshipId = token.scholarshipId as string | null;
+    const role = session.user.role;
+    const status = session.user.status;
+    const scholarshipId = session.user.scholarshipId;
 
     // Admin users should not visit student pages
     if (role === "ADMIN" && !pathname.startsWith("/admin")) {
@@ -65,7 +57,7 @@ export default async function middleware(req: NextRequest) {
     }
 
     return NextResponse.next();
-}
+});
 
 export const config = {
     matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
