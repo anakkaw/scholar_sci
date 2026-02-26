@@ -6,6 +6,11 @@ import { prisma } from "./prisma";
 import { authConfig } from "./auth.config";
 import { isRateLimited, incrementCounter, resetLimit } from "./rate-limit";
 
+// Fix: Ensure NEXTAUTH_URL has protocol prefix (Vercel env may omit https://)
+if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.startsWith("http")) {
+    process.env.NEXTAUTH_URL = `https://${process.env.NEXTAUTH_URL}`;
+}
+
 class EmailNotVerifiedError extends CredentialsSignin {
     code = "email_not_verified";
 }
