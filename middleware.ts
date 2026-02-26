@@ -1,19 +1,58 @@
-import NextAuth from "next-auth";
-import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { decode } from "next-auth/jwt";
 
-const { auth } = NextAuth(authConfig);
+async function getSessionToken(req: NextRequest) {
+    const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+    if (!secret) return null;
 
-export default auth((req) => {
-    const { nextUrl, auth: session } = req;
-    const isLoggedIn = !!session;
-    const pathname = nextUrl.pathname;
+    // Try both secure (HTTPS/Vercel) and non-secure (localhost) cookie names
+    const cookieNames = [
+        "__Secure-authjs.session-token",
+        "authjs.session-token",
+    ];
+
+    for (const cookieName of cookieNames) {
+        // Handle single cookie
+        let tokenValue = req.cookies.get(cookieName)?.value;
+
+        // If not found, try chunked cookies (next-auth splits large JWTs)
+        if (!tokenValue) {
+            const chunks: string[] = [];
+            let i = 0;
+            while (true) {
+                const chunk = req.cookies.get(`${cookieName}.${i}`)?.value;
+                if (!chunk) break;
+                chunks.push(chunk);
+                i++;
+            }
+            if (chunks.length > 0) {
+                tokenValue = chunks.join("");
+            }
+        }
+
+        if (tokenValue) {
+            try {
+                return await decode({ token: tokenValue, secret, salt: cookieName });
+            } catch {
+                continue;
+            }
+        }
+    }
+    return null;
+}
+
+export default async function middleware(req: NextRequest) {
+    const pathname = req.nextUrl.pathname;
+
+    const token = await getSessionToken(req);
+    const isLoggedIn = !!token;
 
     // Public routes that don't need auth
     const publicRoutes = ["/login", "/register", "/select-scholarship", "/verify-email", "/forgot-password", "/reset-password"];
     if (publicRoutes.some((r) => pathname.startsWith(r))) {
         if (isLoggedIn && (pathname === "/login" || pathname === "/register")) {
-            const role = session.user.role;
+            const role = token.role as string;
             return NextResponse.redirect(
                 new URL(role === "ADMIN" ? "/admin/dashboard" : "/dashboard", req.url)
             );
@@ -26,9 +65,9 @@ export default auth((req) => {
         return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(pathname)}`, req.url));
     }
 
-    const role = session.user.role;
-    const status = session.user.status;
-    const scholarshipId = session.user.scholarshipId;
+    const role = token.role as string;
+    const status = token.status as string;
+    const scholarshipId = token.scholarshipId as string | null;
 
     // Admin users should not visit student pages
     if (role === "ADMIN" && !pathname.startsWith("/admin")) {
@@ -57,7 +96,7 @@ export default auth((req) => {
     }
 
     return NextResponse.next();
-});
+}
 
 export const config = {
     matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
