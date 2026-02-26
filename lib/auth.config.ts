@@ -1,5 +1,4 @@
 import { NextAuthConfig } from "next-auth";
-import { Role, UserStatus } from "@prisma/client";
 
 export const authConfig = {
     trustHost: true,
@@ -12,8 +11,8 @@ export const authConfig = {
             // Initial sign in
             if (user) {
                 token.id = user.id as string;
-                token.role = user.role as Role;
-                token.status = user.status as UserStatus;
+                token.role = user.role as "STUDENT" | "ADMIN";
+                token.status = user.status as "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
                 token.scholarshipId = user.scholarshipId as string | null;
             }
 
