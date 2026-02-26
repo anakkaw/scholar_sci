@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { AppLayout, NavItem } from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
@@ -17,7 +17,7 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode
 }) {
-    const session = await auth();
+    const session = await getSession();
 
     if (!session?.user?.id) {
         redirect("/login");
@@ -27,13 +27,15 @@ export default async function AdminLayout({
         redirect("/dashboard");
     }
 
-    // Count unread messages from students
-    const unreadMessages = await prisma.message.count({
+    // Start DB query immediately — don't block on it until needed below
+    const unreadPromise = prisma.message.count({
         where: {
             isRead: false,
             sender: { role: "STUDENT" },
         },
     });
+
+    const unreadMessages = await unreadPromise;
 
     const navItems: NavItem[] = [
         {

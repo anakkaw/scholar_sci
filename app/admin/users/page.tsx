@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
@@ -26,7 +26,7 @@ export default async function AdminUsersPage(
     props: { searchParams?: Promise<{ q?: string; status?: string; pending?: string }> }
 ) {
     const searchParams = await props.searchParams;
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) redirect("/login");
 
     const query = searchParams?.q || "";

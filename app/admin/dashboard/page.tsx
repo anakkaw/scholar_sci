@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import {
@@ -56,7 +56,7 @@ function ComplianceBar({ submitted, total }: { submitted: number; total: number 
 }
 
 export default async function AdminDashboardPage() {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) redirect("/login");
 
     const [
@@ -77,21 +77,13 @@ export default async function AdminDashboardPage() {
         prisma.academicRecord.count({ where: { status: "PENDING" } }),
         prisma.achievement.count({ where: { verificationStatus: "PENDING" } }),
         prisma.academicRecord
-            .findMany({ select: { userId: true }, distinct: ["userId"] })
+            .groupBy({ by: ["userId"] })
             .then((r) => r.length),
         prisma.achievement
-            .findMany({
-                select: { userId: true },
-                distinct: ["userId"],
-                where: { type: "ACTIVITY" },
-            })
+            .groupBy({ by: ["userId"], where: { type: "ACTIVITY" } })
             .then((r) => r.length),
         prisma.progressReport
-            .findMany({
-                select: { userId: true },
-                distinct: ["userId"],
-                where: { milestoneId: { not: null } },
-            })
+            .groupBy({ by: ["userId"], where: { milestoneId: { not: null } } })
             .then((r) => r.length),
     ]);
 

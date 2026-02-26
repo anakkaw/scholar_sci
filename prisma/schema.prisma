@@ -262,6 +262,7 @@ model Achievement {
 
   @@index([userId])
   @@index([type])
+  @@index([userId, type])    // Composite: filters by owner + type together
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -436,6 +437,8 @@ model Message {
 
   @@index([threadId])
   @@index([senderId])
+  @@index([threadId, isRead])    // Composite: unread count per thread (student badge query)
+  @@index([isRead, senderId])    // Composite: unread count from students (admin badge query)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

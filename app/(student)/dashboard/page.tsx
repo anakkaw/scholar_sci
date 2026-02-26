@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -127,7 +127,7 @@ function ContactDecor() {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) redirect("/login");
 
     const userId = session.user.id;
@@ -138,6 +138,8 @@ export default async function DashboardPage() {
             scholarship: {
                 include: {
                     milestones: {
+                        // Only fetch the two fields actually used in the UI
+                        select: { id: true, title: true },
                         orderBy: [{ targetYearLevel: "asc" }, { orderIndex: "asc" }],
                     },
                 },

@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 type ActionResult<T = string> = { success?: T; error?: string };
@@ -6,7 +6,7 @@ type ActionResult<T = string> = { success?: T; error?: string };
 // ── Auth guards ──────────────────────────────────────────────────────────────
 
 export async function requireAdmin() {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id || session.user.role !== "ADMIN") {
         throw new AuthError("ไม่มีสิทธิ์ในการดำเนินการ");
     }
@@ -14,7 +14,7 @@ export async function requireAdmin() {
 }
 
 export async function requireUser() {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
         throw new AuthError("กรุณาเข้าสู่ระบบ");
     }
