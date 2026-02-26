@@ -1,0 +1,418 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum AchievementType {
+  ACTIVITY
+  PUBLICATION
+  COMPETITION
+  PATENT
+  PROJECT
+  AWARD
+  OTHER
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWED
+  NEED_REVISION
+}
+
+
+enum EvidenceOwnerType {
+  ACHIEVEMENT
+  REPORT
+  DOCUMENT
+}
+
+enum ScholarshipScope {
+  ALL
+  SPECIFIC
+}
+
+enum AuditAction {
+  USER_APPROVED
+  USER_REJECTED
+  USER_SUSPENDED
+  USER_REINSTATED
+  SCHOLARSHIP_CHANGED
+  REPORT_REVIEWED
+  DOCUMENT_UPLOADED
+  DOCUMENT_DELETED
+  ACHIEVEMENT_VERIFIED
+  ACHIEVEMENT_REJECTED
+  ACADEMIC_RECORD_VERIFIED
+  ACADEMIC_RECORD_REJECTED
+  ADMIN_CREATED
+  STUDENT_PROFILE_UPDATED
+  MANDATORY_ACTIVITY_CREATED
+  MANDATORY_ACTIVITY_DELETED
+  ATTENDANCE_UPDATED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER & AUTH
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  emailVerified DateTime?  // null = not yet verified; set when user clicks the link
+  passwordHash  String?
+  role          Role       @default(STUDENT)
+  status        UserStatus @default(PENDING)
+  image         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  studentProfile              StudentProfile?
+  achievements                Achievement[]
+  progressReports             ProgressReport[]
+  academicRecords             AcademicRecord[]
+  reviewedAcademicRecords     AcademicRecord[]         @relation("AcademicRecordReviewer")
+  auditLogsAsActor            AuditLog[]               @relation("AuditActorAdmin")
+  auditLogsAsTarget           AuditLog[]               @relation("AuditTargetUser")
+  reviewedReports             ProgressReport[]         @relation("ReportReviewer")
+  emailVerificationTokens     EmailVerificationToken[]
+
+  mandatoryActivityParticipations MandatoryActivityParticipation[]
+  passwordResetTokens             PasswordResetToken[]
+
+  // NextAuth adapter tables
+  accounts Account[]
+
+  @@index([email])
+  @@index([role, status])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDENT PROFILE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model StudentProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  studentIdCode   String?
+  fullName        String
+  nickname        String?
+  faculty         String?
+  major           String?
+  degreeLevel     String?
+  yearLevel       Int?
+  phone           String?
+  backupEmail     String?
+  address         String?
+  profileImageUrl String?
+  scholarshipId   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scholarship Scholarship @relation(fields: [scholarshipId], references: [id])
+
+  @@index([scholarshipId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHOLARSHIP
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Scholarship {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  active      Boolean  @default(true)
+  minGpa      Float?   // เกรดขั้นต่ำต่อภาคเรียน เช่น 3.00
+  minGpax     Float?   // เกรดสะสมขั้นต่ำ (GPAX)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  milestones          ReportMilestone[]
+  studentProfiles     StudentProfile[]
+  documents           Document[]
+  mandatoryActivities MandatoryActivity[]
+
+  @@index([active])
+}
+
+
+model ReportMilestone {
+  id              String   @id @default(cuid())
+  scholarshipId   String
+  title           String   // e.g. "ส่งหัวข้อโครงงาน"
+  description     String?  @db.Text
+  targetYearLevel Int      // 1–6 (ปีการศึกษาที่ต้องส่ง)
+  targetSemester  String   // "1" | "2" | "3"
+  orderIndex      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  scholarship     Scholarship      @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  progressReports ProgressReport[]
+
+  @@index([scholarshipId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACHIEVEMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Achievement {
+  id                  String             @id @default(cuid())
+  userId              String
+  type                AchievementType
+  title               String
+  description         String?            @db.Text
+  date                DateTime?
+  coAuthors           String?
+  referenceUrl        String?
+  verificationStatus  VerificationStatus @default(PENDING)
+  verificationNote    String?            @db.Text
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments EvidenceAttachment[]
+
+  @@index([userId])
+  @@index([type])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MANDATORY ACTIVITY (admin-defined, auto-assigned to matching students)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model MandatoryActivity {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?   @db.Text
+  date          DateTime?
+  scholarshipId String?   // null = all scholarships
+  yearLevel     Int?      // null = all year levels
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scholarship    Scholarship?                     @relation(fields: [scholarshipId], references: [id])
+  participations MandatoryActivityParticipation[]
+
+  @@index([scholarshipId])
+}
+
+model MandatoryActivityParticipation {
+  id         String   @id @default(cuid())
+  activityId String
+  userId     String
+  attended   Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+
+  activity MandatoryActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@index([userId])
+  @@index([activityId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROGRESS REPORT
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ProgressReport {
+  id              String       @id @default(cuid())
+  userId          String
+  milestoneId     String?      // link to ReportMilestone (null = legacy free-form)
+  academicYear    String       // e.g. "2567"
+  semester        String       // e.g. "1", "2", "3"
+  summary         String?      @db.Text
+  kpiResults      Json?        // array of { requirementId, value, note }
+  status          ReportStatus @default(DRAFT)
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  reviewerAdminId String?
+  reviewNote      String?      @db.Text
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestone     ReportMilestone? @relation(fields: [milestoneId], references: [id])
+  reviewerAdmin User?            @relation("ReportReviewer", fields: [reviewerAdminId], references: [id])
+  attachments   EvidenceAttachment[]
+
+  @@index([userId])
+  @@index([userId, milestoneId])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACADEMIC RECORD (GPA per semester)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AcademicRecord {
+  id              String             @id @default(cuid())
+  userId          String
+  academicYear    String             // e.g. "2567"
+  semester        String             // "1" | "2" | "3"
+  gpa             Float
+  gpax            Float?             // cumulative GPA (เกรดเฉลี่ยสะสม)
+  transcriptUrl   String?
+  transcriptName  String?
+  status          VerificationStatus @default(PENDING)
+  reviewNote      String?            @db.Text
+  reviewerAdminId String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  user          User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewerAdmin User? @relation("AcademicRecordReviewer", fields: [reviewerAdminId], references: [id])
+
+  @@unique([userId, academicYear, semester])
+  @@index([userId])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EVIDENCE ATTACHMENT (polymorphic)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model EvidenceAttachment {
+  id            String            @id @default(cuid())
+  ownerType     EvidenceOwnerType
+  ownerId       String
+  fileUrl       String?
+  linkUrl       String?
+  fileName      String?
+  fileSizeBytes Int?
+  mimeType      String?
+  createdAt     DateTime          @default(now())
+
+  // optional typed relations
+  achievement Achievement?    @relation(fields: [ownerId], references: [id], onDelete: Cascade, map: "evidence_achievement_fk")
+  report      ProgressReport? @relation(fields: [ownerId], references: [id], onDelete: Cascade, map: "evidence_report_fk")
+
+  @@index([ownerType, ownerId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOCUMENT LIBRARY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Document {
+  id              String           @id @default(cuid())
+  title           String
+  category        String           // คู่มือ / แบบฟอร์ม / ประกาศ / อื่นๆ
+  scholarshipScope ScholarshipScope @default(ALL)
+  scholarshipId   String?
+  fileUrl         String
+  fileName        String
+  fileSizeBytes   Int
+  mimeType        String
+  isPublished     Boolean          @default(false)
+  uploadedById    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  scholarship Scholarship? @relation(fields: [scholarshipId], references: [id])
+
+  @@index([isPublished])
+  @@index([scholarshipScope, scholarshipId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  actorAdminId   String
+  action         AuditAction
+  targetUserId   String?
+  detailJson     Json?
+  createdAt      DateTime    @default(now())
+
+  actorAdmin  User  @relation("AuditActorAdmin", fields: [actorAdminId], references: [id])
+  targetUser  User? @relation("AuditTargetUser", fields: [targetUserId], references: [id])
+
+  @@index([actorAdminId])
+  @@index([targetUserId])
+  @@index([createdAt])
+}

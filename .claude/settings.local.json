@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(node node_modules/next/dist/bin/next build:*)",
+      "Bash(node node_modules/prisma/build/index.js:*)",
+      "Bash(echo:*)",
+      "Bash(gtimeout 60 node:*)",
+      "Bash(node -e \":*)",
+      "Bash(npm install:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx tsc:*)",
+      "Bash(npx prisma:*)",
+      "Bash(node -e:*)",
+      "Bash(cat:*)",
+      "Bash(xargs:*)",
+      "Bash(npx next build:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(head -5 \"/Users/watcharaponga/Library/CloudStorage/OneDrive-Personal/Documents/ScholarSci/app/\\(student\\)/academic/page.tsx\")",
+      "Bash(git init)",
+      "Bash(git remote add origin https://github.com/anakkaw/scholar_sci.git)",
+      "Bash(git branch -m main)",
+      "Bash(git add .)"
+    ]
+  }
+}
