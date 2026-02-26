@@ -25,7 +25,13 @@ export const registerAction = async (values: z.infer<typeof RegisterSchema>) => 
     });
 
     if (existingUser) {
-        return { error: "อีเมลนี้มีอยู่ในระบบแล้ว" };
+        // If user exists but hasn't verified email, allow re-registration
+        if (!existingUser.emailVerified) {
+            // Delete old user record (cascades to profile & tokens) so they can re-register
+            await prisma.user.delete({ where: { id: existingUser.id } });
+        } else {
+            return { error: "อีเมลนี้มีอยู่ในระบบแล้ว" };
+        }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -64,7 +70,15 @@ export const registerAction = async (values: z.infer<typeof RegisterSchema>) => 
         });
 
         // Send the verification email (outside the transaction so a failure doesn't rollback the user)
-        await sendVerificationEmail(email, verificationToken!);
+        try {
+            await sendVerificationEmail(email, verificationToken!);
+        } catch (emailError) {
+            console.error("Failed to send verification email:", emailError);
+            // User is created but email failed — return success with warning
+            return {
+                success: "ลงทะเบียนสำเร็จ! แต่ระบบไม่สามารถส่งอีเมลยืนยันได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+            };
+        }
 
         return {
             success: "ลงทะเบียนสำเร็จ! กรุณาตรวจสอบกล่องจดหมาย @nu.ac.th ของคุณและคลิกลิงก์ยืนยันอีเมลก่อนเข้าสู่ระบบ",

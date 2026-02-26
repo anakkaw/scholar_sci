@@ -1,6 +1,12 @@
 import nodemailer from "nodemailer";
 
-const APP_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
+// Use function to lazily resolve URL (env may be fixed at runtime by auth.ts)
+function getAppUrl(): string {
+    const raw = process.env.NEXTAUTH_URL || process.env.AUTH_URL || "http://localhost:3000";
+    if (raw.startsWith("http")) return raw;
+    return `https://${raw}`;
+}
+
 const FROM_EMAIL = process.env.EMAIL_FROM || "ScholarSci <watcharaponga@nu.ac.th>";
 
 const transporter = nodemailer.createTransport({
@@ -42,7 +48,7 @@ function emailHtml(heading: string, body: string, buttonText: string, buttonUrl:
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-    const resetUrl = `${APP_URL}/reset-password?token=${token}`;
+    const resetUrl = `${getAppUrl()}/reset-password?token=${token}`;
     await transporter.sendMail({
         from: FROM_EMAIL,
         to: email,
@@ -58,7 +64,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
-    const verifyUrl = `${APP_URL}/verify-email?token=${token}`;
+    const verifyUrl = `${getAppUrl()}/verify-email?token=${token}`;
     await transporter.sendMail({
         from: FROM_EMAIL,
         to: email,
