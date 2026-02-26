@@ -5,8 +5,16 @@ import { getToken } from "next-auth/jwt";
 export default async function middleware(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
 
+    // Determine correct cookie name for next-auth v5
+    // Production (HTTPS) uses __Secure- prefix, localhost uses plain name
+    const isSecure = req.nextUrl.protocol === "https:";
+    const cookieName = isSecure
+        ? "__Secure-authjs.session-token"
+        : "authjs.session-token";
+
     // Read JWT token directly (Edge-compatible via jose)
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET });
+    const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+    const token = await getToken({ req, secret, cookieName, salt: cookieName });
     const isLoggedIn = !!token;
 
     // Public routes that don't need auth
