@@ -5,6 +5,9 @@ export const authConfig = {
     pages: {
         signIn: "/login",
     },
+    session: {
+        strategy: "jwt" as const,
+    },
     providers: [], // Provided in auth.ts
     callbacks: {
         async jwt({ token, user, trigger, session }) {
