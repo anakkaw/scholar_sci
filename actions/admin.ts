@@ -12,9 +12,6 @@ import { requireAdmin, safeAction, revalidateAdminDashboard } from "@/lib/action
 export const updateUserStatusAction = async (userId: string, status: UserStatus, reason?: string) =>
     safeAction(async () => {
         const session = await requireAdmin();
-        const user = await prisma.user.findUnique({ where: { id: userId, role: "STUDENT" } });
-        if (!user) return { error: "ไม่พบผู้ใช้งาน หรือผู้ใช้นี้ไม่ใช่เจ้าหน้าที่ส่วนนิสิต" };
-        if (user.status === status) return { error: `ผู้ใช้งานนี้มีสถานะ ${status} อยู่แล้ว` };
 
         const auditAction: AuditAction = ({
             APPROVED: "USER_APPROVED",
@@ -23,14 +20,21 @@ export const updateUserStatusAction = async (userId: string, status: UserStatus,
             PENDING: "USER_REINSTATED",
         } as const)[status] ?? "USER_APPROVED";
 
+        // Single transaction: update + audit log in one DB roundtrip.
+        // The where-clause { role: "STUDENT" } guards against invalid targets;
+        // Prisma throws RecordNotFound (caught by safeAction) if user doesn't exist.
         await prisma.$transaction([
-            prisma.user.update({ where: { id: userId }, data: { status } }),
+            prisma.user.update({
+                where: { id: userId, role: "STUDENT" },
+                data: { status },
+                select: { id: true }, // minimal return
+            }),
             prisma.auditLog.create({
                 data: {
                     actorAdminId: session.user.id,
                     action: auditAction,
                     targetUserId: userId,
-                    detailJson: reason ? { reason, previousStatus: user.status } : { previousStatus: user.status },
+                    detailJson: reason ? { reason } : {},
                 },
             }),
         ]);
