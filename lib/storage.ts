@@ -1,12 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Supabase client for storage
-// We use the service role key to bypass RLS policies for admin-level uploads
-// Make sure your bucket is set to "Public" if you want users to download via URL directly
-export const supabaseStorage = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Initialize Supabase client lazily to avoid build-time errors when env vars are not present
+let _supabaseStorage: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseStorage() {
+    if (!_supabaseStorage) {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!url || !key) {
+            throw new Error("Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");
+        }
+        _supabaseStorage = createClient(url, key);
+    }
+    return _supabaseStorage;
+}
 
 /**
  * Uploads a file buffer to Supabase Storage
@@ -23,7 +30,8 @@ export async function uploadFileToStorage(
     bucketName: string = "scholarsci"
 ) {
     try {
-        const { data, error } = await supabaseStorage.storage
+        const client = getSupabaseStorage();
+        const { data, error } = await client.storage
             .from(bucketName)
             .upload(path, buffer, {
                 contentType: mimeType,
@@ -35,7 +43,7 @@ export async function uploadFileToStorage(
             throw error;
         }
 
-        const { data: publicUrlData } = supabaseStorage.storage
+        const { data: publicUrlData } = client.storage
             .from(bucketName)
             .getPublicUrl(path);
 
