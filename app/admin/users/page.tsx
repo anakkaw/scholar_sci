@@ -8,6 +8,7 @@ import { formatShortDate } from "@/lib/utils";
 import { UserStatusDropdown } from "./UserStatusDropdown";
 import { QuickApproveButton } from "./QuickApproveButton";
 import { UserSearchInput } from "./UserSearchInput";
+import { ScholarshipFilterSelect } from "./ScholarshipFilterSelect";
 import { Suspense } from "react";
 import { Eye, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ const STATUS_FILTERS = [
 ];
 
 export default async function AdminUsersPage(
-    props: { searchParams?: Promise<{ q?: string; status?: string; pending?: string }> }
+    props: { searchParams?: Promise<{ q?: string; status?: string; pending?: string; scholarship?: string }> }
 ) {
     const searchParams = await props.searchParams;
     const session = await getSession();
@@ -31,11 +32,13 @@ export default async function AdminUsersPage(
     const query = searchParams?.q || "";
     const statusFilter = searchParams?.status || "ALL";
     const pendingFilter = searchParams?.pending || "";
+    const scholarshipFilter = searchParams?.scholarship || "";
 
     // Build where clause
     const where: Prisma.UserWhereInput = {
         role: "STUDENT",
         ...(statusFilter !== "ALL" && { status: statusFilter as Prisma.EnumUserStatusFilter }),
+        ...(scholarshipFilter && { studentProfile: { scholarshipId: scholarshipFilter } }),
         ...(query && {
             OR: [
                 { email: { contains: query, mode: "insensitive" as const } },
@@ -48,7 +51,7 @@ export default async function AdminUsersPage(
         ...(pendingFilter === "reports" && { progressReports: { some: { status: "SUBMITTED" as const } } }),
     };
 
-    const [users, totalByStatus] = await Promise.all([
+    const [users, totalByStatus, scholarships] = await Promise.all([
         prisma.user.findMany({
             where,
             include: { studentProfile: { include: { scholarship: { select: { id: true, name: true } } } } },
@@ -58,6 +61,11 @@ export default async function AdminUsersPage(
             by: ["status"],
             where: { role: "STUDENT" },
             _count: { id: true },
+        }),
+        prisma.scholarship.findMany({
+            where: { active: true },
+            select: { id: true, name: true, _count: { select: { studentProfiles: true } } },
+            orderBy: { name: "asc" },
         }),
     ]);
 
@@ -81,7 +89,10 @@ export default async function AdminUsersPage(
                         กรองเฉพาะนิสิตที่มี{pendingFilter === "gpa" ? " GPA รอตรวจสอบ" : pendingFilter === "achievements" ? "ผลงานรอตรวจสอบ" : "รายงานรอตรวจสอบ"}
                         {" "}— {users.length} คน
                     </span>
-                    <Link href="/admin/users" className="text-xs text-amber-600 hover:text-amber-800 underline ml-auto">
+                    <Link
+                        href={`/admin/users${scholarshipFilter ? `?scholarship=${scholarshipFilter}` : ""}`}
+                        className="text-xs text-amber-600 hover:text-amber-800 underline ml-auto"
+                    >
                         ล้างตัวกรอง
                     </Link>
                 </div>
@@ -92,8 +103,12 @@ export default async function AdminUsersPage(
                 {STATUS_FILTERS.map(f => {
                     const cnt = f.value === "ALL" ? totalAll : (countByStatus[f.value] ?? 0);
                     const isActive = statusFilter === f.value;
+                    const pillParams = new URLSearchParams();
+                    pillParams.set("status", f.value);
+                    if (query) pillParams.set("q", query);
+                    if (scholarshipFilter) pillParams.set("scholarship", scholarshipFilter);
                     return (
-                        <Link key={f.value} href={`/admin/users?status=${f.value}${query ? `&q=${query}` : ""}`}>
+                        <Link key={f.value} href={`/admin/users?${pillParams.toString()}`}>
                             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all border
                                 ${isActive
                                     ? "bg-amber-600 text-white border-amber-600 shadow-sm"
@@ -122,10 +137,18 @@ export default async function AdminUsersPage(
                                 </CardDescription>
                             </div>
                         </div>
-                        <div className="max-w-xs w-full">
+                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                             <Suspense>
-                                <UserSearchInput defaultValue={query} />
+                                <ScholarshipFilterSelect
+                                    scholarships={scholarships}
+                                    currentScholarshipId={scholarshipFilter}
+                                />
                             </Suspense>
+                            <div className="flex-1 min-w-[180px]">
+                                <Suspense>
+                                    <UserSearchInput defaultValue={query} />
+                                </Suspense>
+                            </div>
                         </div>
                     </div>
                 </CardHeader>
