@@ -37,6 +37,7 @@ import { GpaEditModal } from "./GpaEditModal";
 import { EditStudentProfileModal } from "./EditStudentProfileModal";
 import { AchievementReviewButtons } from "./AchievementReviewButtons";
 import { ReportReviewButtons } from "./ReportReviewButtons";
+import { ChangeScholarshipModal } from "./ChangeScholarshipModal";
 import { reviewAcademicRecordAction, updateAttendanceAction } from "@/actions/admin";
 
 export default async function AdminUserDetailPage({
@@ -48,7 +49,7 @@ export default async function AdminUserDetailPage({
     const session = await getSession();
     if (!session?.user?.id) redirect("/login");
 
-    const [student, participations, progressReports] = await Promise.all([
+    const [student, participations, progressReports, scholarships] = await Promise.all([
         prisma.user.findUnique({
             where: { id, role: "STUDENT" },
             include: {
@@ -72,6 +73,11 @@ export default async function AdminUserDetailPage({
             where: { userId: id },
             include: { milestone: true, attachments: true },
             orderBy: { createdAt: "desc" },
+        }),
+        prisma.scholarship.findMany({
+            where: { active: true },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
         }),
     ]);
 
@@ -168,10 +174,16 @@ export default async function AdminUserDetailPage({
                                 </Badge>
                             }
                         />
-                        <InfoRow
-                            label="ทุนการศึกษา"
-                            value={profile?.scholarship?.name ?? "-"}
-                        />
+                        {profile ? (
+                            <ChangeScholarshipModal
+                                userId={student.id}
+                                currentScholarshipId={profile.scholarshipId}
+                                currentScholarshipName={profile.scholarship?.name ?? "-"}
+                                scholarships={scholarships}
+                            />
+                        ) : (
+                            <InfoRow label="ทุนการศึกษา" value="-" />
+                        )}
                         <InfoRow label="สาขาวิชา (ภาควิชา)" value={profile?.major ?? "-"} />
                         <InfoRow label="ชั้นปี" value={profile?.yearLevel ? `ปีที่ ${profile.yearLevel}` : "-"} />
                         <InfoRow

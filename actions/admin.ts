@@ -319,3 +319,35 @@ export const reviewReportAction = async (
         revalidateAdminDashboard();
         return { success: status === "REVIEWED" ? "ตรวจสอบรายงานเรียบร้อย" : "ส่งกลับให้แก้ไขเรียบร้อย" };
     }, "เกิดข้อผิดพลาดในการตรวจสอบรายงาน");
+
+// ── CHANGE STUDENT SCHOLARSHIP ───────────────────────────────────────────────
+
+export const adminChangeScholarshipAction = async (userId: string, scholarshipId: string) =>
+    safeAction(async () => {
+        const session = await requireAdmin();
+
+        // Verify scholarship exists
+        const scholarship = await prisma.scholarship.findUnique({
+            where: { id: scholarshipId },
+            select: { id: true, name: true },
+        });
+        if (!scholarship) return { error: "ไม่พบทุนการศึกษาที่เลือก" };
+
+        await prisma.$transaction([
+            prisma.studentProfile.update({
+                where: { userId },
+                data: { scholarshipId },
+            }),
+            prisma.auditLog.create({
+                data: {
+                    actorAdminId: session.user.id,
+                    action: "SCHOLARSHIP_CHANGED",
+                    targetUserId: userId,
+                    detailJson: { scholarshipId, scholarshipName: scholarship.name },
+                },
+            }),
+        ]);
+
+        revalidatePath(`/admin/users/${userId}`);
+        return { success: `เปลี่ยนทุนการศึกษาเป็น "${scholarship.name}" เรียบร้อยแล้ว` };
+    }, "เกิดข้อผิดพลาดในการเปลี่ยนทุนการศึกษา");
