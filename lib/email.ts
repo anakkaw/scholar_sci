@@ -7,7 +7,10 @@ function getAppUrl(): string {
     return `https://${raw}`;
 }
 
-const FROM_EMAIL = process.env.EMAIL_FROM || "ScholarSci <watcharaponga@nu.ac.th>";
+// FROM ต้องตรงกับ SMTP_USER เพื่อลด domain mismatch (ลดโอกาสเข้า spam)
+// Gmail จะ reject / flag ถ้า FROM domain ไม่ตรงกับ authenticated sender
+const FROM_EMAIL = process.env.EMAIL_FROM
+    || (process.env.SMTP_USER ? `ScholarSci <${process.env.SMTP_USER}>` : "ScholarSci <noreply@gmail.com>");
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
