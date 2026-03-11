@@ -3,11 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AchievementForm } from "@/components/student/achievement-form";
+import { ActivitySubmissionForm } from "@/components/student/activity-submission-form";
 import { formatDate } from "@/lib/utils";
 import { ACHIEVEMENT_TYPES } from "@/types/index";
-import { FileText, Trash, ExternalLink, Trophy, CalendarCheck } from "lucide-react";
+import { FileText, Trash, ExternalLink, Trophy, CalendarCheck, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteAchievementAction } from "@/actions/achievement";
+import { deleteActivitySubmissionAction } from "@/actions/activity-submission";
 
 export default async function AchievementsPage() {
     const session = await auth();
@@ -16,7 +18,13 @@ export default async function AchievementsPage() {
     const [participations, achievements] = await Promise.all([
         prisma.mandatoryActivityParticipation.findMany({
             where: { userId: session.user.id },
-            include: { activity: true },
+            include: {
+                activity: true,
+                submissions: {
+                    include: { attachments: true },
+                    orderBy: { createdAt: "desc" },
+                },
+            },
             orderBy: { activity: { createdAt: "desc" } },
         }),
         prisma.achievement.findMany({
@@ -102,7 +110,7 @@ export default async function AchievementsPage() {
                 <AchievementForm />
             </div>
 
-            {/* Section 1: Mandatory Activities — compact display */}
+            {/* Section 1: Mandatory Activities */}
             <div className="rounded-xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
                 <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-gray-700">
                     <CalendarCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -115,20 +123,107 @@ export default async function AchievementsPage() {
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-50 dark:divide-gray-700/60">
-                        {participations.map(p => (
-                            <div key={p.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-                                <p className="text-sm text-slate-700 dark:text-gray-300 leading-snug">{p.activity.title}</p>
-                                {p.attended ? (
-                                    <span className="text-[10px] font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                                        ✓ เข้าร่วม
-                                    </span>
-                                ) : (
-                                    <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                                        รอเข้าร่วม
-                                    </span>
-                                )}
-                            </div>
-                        ))}
+                        {participations.map(p => {
+                            const latestSubmission = p.submissions[0];
+                            const isPassed = p.attended || latestSubmission?.status === "VERIFIED";
+                            const hasPending = latestSubmission?.status === "PENDING";
+                            const hasRejected = latestSubmission?.status === "REJECTED";
+
+                            return (
+                                <div key={p.id} className="px-4 py-3 space-y-2">
+                                    {/* Activity title + status */}
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm text-slate-700 dark:text-gray-300 leading-snug">{p.activity.title}</p>
+                                            {p.activity.description && (
+                                                <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{p.activity.description}</p>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {isPassed ? (
+                                                <span className="text-[10px] font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
+                                                    <CheckCircle2 className="w-3 h-3" /> ผ่าน
+                                                </span>
+                                            ) : hasPending ? (
+                                                <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" /> รอตรวจ
+                                                </span>
+                                            ) : hasRejected ? (
+                                                <span className="text-[10px] font-semibold text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
+                                                    <XCircle className="w-3 h-3" /> ไม่ผ่าน
+                                                </span>
+                                            ) : (
+                                                <ActivitySubmissionForm
+                                                    participationId={p.id}
+                                                    activityTitle={p.activity.title}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Submission details */}
+                                    {latestSubmission && (
+                                        <div className="ml-0 space-y-1.5">
+                                            {latestSubmission.message && (
+                                                <p className="text-[11px] text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-gray-700/50 rounded-lg px-3 py-2">
+                                                    {latestSubmission.message}
+                                                </p>
+                                            )}
+
+                                            {latestSubmission.attachments.length > 0 && (
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-[11px] text-slate-400 dark:text-gray-500">ไฟล์แนบ:</span>
+                                                    {latestSubmission.attachments.map(att => (
+                                                        <a key={att.id} href={att.fileUrl || "#"} target="_blank" rel="noreferrer"
+                                                            className="text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-lg inline-flex items-center gap-1">
+                                                            <FileText className="w-3 h-3" />{att.fileName}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Rejected: show review note + resubmit */}
+                                            {hasRejected && (
+                                                <div className="space-y-2">
+                                                    {latestSubmission.reviewNote && (
+                                                        <p className="text-[11px] text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                                                            หมายเหตุจากเจ้าหน้าที่: {latestSubmission.reviewNote}
+                                                        </p>
+                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                        <ActivitySubmissionForm
+                                                            participationId={p.id}
+                                                            activityTitle={p.activity.title}
+                                                            triggerLabel="ส่งใหม่"
+                                                        />
+                                                        <form action={async () => {
+                                                            "use server";
+                                                            await deleteActivitySubmissionAction(latestSubmission.id);
+                                                        }}>
+                                                            <Button type="submit" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50 h-7 px-2 text-xs">
+                                                                <Trash className="w-3 h-3 mr-1" /> ลบ
+                                                            </Button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Pending: show delete option */}
+                                            {hasPending && (
+                                                <form action={async () => {
+                                                    "use server";
+                                                    await deleteActivitySubmissionAction(latestSubmission.id);
+                                                }}>
+                                                    <Button type="submit" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50 h-7 px-2 text-xs">
+                                                        <Trash className="w-3 h-3 mr-1" /> ยกเลิกการส่ง
+                                                    </Button>
+                                                </form>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>

@@ -102,6 +102,15 @@ export const ScholarshipSchema = z.object({
     milestones: z.array(MilestoneSchema).optional(),
 });
 
+export const ActivitySubmissionSchema = z.object({
+    participationId: z.string().min(1, "กรุณาระบุกิจกรรม"),
+    message: z.string().optional(),
+    attachmentUrl: z.string().optional(),
+    attachmentName: z.string().optional(),
+    attachmentSize: z.number().optional(),
+    attachmentType: z.string().optional(),
+});
+
 export const AcademicRecordSchema = z.object({
     academicYear:   z.string().min(4, "กรุณาระบุปีการศึกษา (พ.ศ.)"),
     semester:       z.string().min(1, "กรุณาเลือกภาคเรียน"),

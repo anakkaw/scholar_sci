@@ -55,6 +55,7 @@ enum EvidenceOwnerType {
   ACHIEVEMENT
   REPORT
   DOCUMENT
+  ACTIVITY_SUBMISSION
 }
 
 enum ScholarshipScope {
@@ -80,6 +81,8 @@ enum AuditAction {
   MANDATORY_ACTIVITY_CREATED
   MANDATORY_ACTIVITY_DELETED
   ATTENDANCE_UPDATED
+  ACTIVITY_SUBMISSION_REVIEWED
+  ACTIVITY_SUBMISSION_REJECTED
 }
 
 enum ThreadStatus {
@@ -293,12 +296,31 @@ model MandatoryActivityParticipation {
   attended   Boolean  @default(false)
   updatedAt  DateTime @updatedAt
 
-  activity MandatoryActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity    MandatoryActivity    @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissions ActivitySubmission[]
 
   @@unique([activityId, userId])
   @@index([userId])
   @@index([activityId])
+}
+
+model ActivitySubmission {
+  id              String             @id @default(cuid())
+  participationId String
+  message         String?            @db.Text
+  status          VerificationStatus @default(PENDING)
+  reviewNote      String?            @db.Text
+  reviewedAt      DateTime?
+  reviewerAdminId String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  participation MandatoryActivityParticipation @relation(fields: [participationId], references: [id], onDelete: Cascade)
+  attachments   EvidenceAttachment[]
+
+  @@index([participationId])
+  @@index([status])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -374,8 +396,9 @@ model EvidenceAttachment {
   createdAt     DateTime          @default(now())
 
   // optional typed relations
-  achievement Achievement?    @relation(fields: [ownerId], references: [id], onDelete: Cascade, map: "evidence_achievement_fk")
-  report      ProgressReport? @relation(fields: [ownerId], references: [id], onDelete: Cascade, map: "evidence_report_fk")
+  achievement        Achievement?        @relation(fields: [ownerId], references: [id], onDelete: Cascade, map: "evidence_achievement_fk")
+  report             ProgressReport?     @relation(fields: [ownerId], references: [id], onDelete: Cascade, map: "evidence_report_fk")
+  activitySubmission ActivitySubmission? @relation(fields: [ownerId], references: [id], onDelete: Cascade, map: "evidence_activity_submission_fk")
 
   @@index([ownerType, ownerId])
 }

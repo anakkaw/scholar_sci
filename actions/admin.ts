@@ -320,6 +320,50 @@ export const reviewReportAction = async (
         return { success: status === "REVIEWED" ? "ตรวจสอบรายงานเรียบร้อย" : "ส่งกลับให้แก้ไขเรียบร้อย" };
     }, "เกิดข้อผิดพลาดในการตรวจสอบรายงาน");
 
+// ── ACTIVITY SUBMISSION REVIEW ────────────────────────────────────────────────
+
+export const reviewActivitySubmissionAction = async (
+    submissionId: string,
+    status: "VERIFIED" | "REJECTED",
+    note?: string
+) =>
+    safeAction(async () => {
+        const session = await requireAdmin();
+
+        const submission = await prisma.activitySubmission.findUnique({
+            where: { id: submissionId },
+            include: { participation: { select: { userId: true, activityId: true } } },
+        });
+        if (!submission) return { error: "ไม่พบงานที่ส่ง" };
+
+        const auditAction = status === "VERIFIED" ? "ACTIVITY_SUBMISSION_REVIEWED" : "ACTIVITY_SUBMISSION_REJECTED";
+
+        await prisma.$transaction([
+            prisma.activitySubmission.update({
+                where: { id: submissionId },
+                data: {
+                    status,
+                    reviewNote: note || null,
+                    reviewerAdminId: session.user.id,
+                    reviewedAt: new Date(),
+                },
+            }),
+            prisma.auditLog.create({
+                data: {
+                    actorAdminId: session.user.id,
+                    action: auditAction as import("@prisma/client").AuditAction,
+                    targetUserId: submission.participation.userId,
+                    detailJson: { submissionId, status, note },
+                },
+            }),
+        ]);
+
+        revalidatePath(`/admin/activities/${submission.participation.activityId}`);
+        revalidatePath("/admin/activities");
+        revalidatePath("/achievements");
+        return { success: status === "VERIFIED" ? "อนุมัติงานเรียบร้อย" : "ปฏิเสธงานเรียบร้อย" };
+    }, "เกิดข้อผิดพลาดในการตรวจสอบงาน");
+
 // ── CHANGE STUDENT SCHOLARSHIP ───────────────────────────────────────────────
 
 export const adminChangeScholarshipAction = async (userId: string, scholarshipId: string) =>

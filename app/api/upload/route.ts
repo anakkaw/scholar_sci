@@ -5,7 +5,7 @@ import { MAX_FILE_SIZE, MAX_IMAGE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/upload-
 import sharp from "sharp";
 
 // Whitelist ของ folder ที่อนุญาต — ป้องกัน path traversal attack
-const ALLOWED_FOLDERS = ["profiles", "achievements", "reports", "transcripts", "general"] as const;
+const ALLOWED_FOLDERS = ["profiles", "achievements", "reports", "transcripts", "activities", "general"] as const;
 type UploadFolder = (typeof ALLOWED_FOLDERS)[number];
 
 export async function POST(req: NextRequest) {
