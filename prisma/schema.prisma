@@ -199,6 +199,8 @@ model StudentProfile {
   scholarship Scholarship @relation(fields: [scholarshipId], references: [id])
 
   @@index([scholarshipId])
+  @@index([yearLevel])       // admin users page filter / activity assignment
+  @@index([degreeLevel])     // activity assignment filter
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -287,6 +289,7 @@ model MandatoryActivity {
   participations MandatoryActivityParticipation[]
 
   @@index([scholarshipId])
+  @@index([scholarshipId, degreeLevel, yearLevel]) // assign-mandatory-activities filter
 }
 
 model MandatoryActivityParticipation {
