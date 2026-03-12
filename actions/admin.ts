@@ -430,7 +430,7 @@ export const adminQuickUpdateStudentFieldAction = async (
                     actorAdminId: session.user.id,
                     action: "STUDENT_PROFILE_UPDATED",
                     targetUserId: userId,
-                    detailJson: { field, oldValue: (profile as Record<string, unknown>)[field], newValue: trimmed || null },
+                    detailJson: { field, oldValue: String((profile as Record<string, unknown>)[field] ?? ""), newValue: trimmed || null },
                 },
             }),
         ]);
