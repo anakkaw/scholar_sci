@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ProfileSchema } from "@/lib/validations";
 import { computeYearLevel } from "@/lib/utils";
 import { requireUser, safeAction, revalidateStudentData } from "@/lib/action-helpers";
+import { assignMandatoryActivitiesToStudent } from "@/lib/assign-mandatory-activities";
 
 export const updateProfileAction = async (values: z.infer<typeof ProfileSchema>) =>
     safeAction(async () => {
@@ -32,6 +33,19 @@ export const updateProfileAction = async (values: z.infer<typeof ProfileSchema>)
                 ...(profileImageUrl ? { profileImageUrl } : {}),
             },
         });
+
+        // Re-assign mandatory activities if profile filters changed
+        if (session.user.status === "APPROVED") {
+            const profile = await prisma.studentProfile.findUnique({
+                where: { userId: session.user.id },
+                select: { scholarshipId: true },
+            });
+            await assignMandatoryActivitiesToStudent(session.user.id, {
+                scholarshipId: profile?.scholarshipId,
+                degreeLevel: degreeLevel || null,
+                yearLevel,
+            });
+        }
 
         revalidateStudentData("/profile");
         return { success: "บันทึกข้อมูลส่วนตัวสำเร็จ" };

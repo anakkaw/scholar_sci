@@ -8,6 +8,7 @@ import * as z from "zod";
 import { ProfileSchema } from "@/lib/validations";
 import { computeYearLevel } from "@/lib/utils";
 import { requireAdmin, safeAction, revalidateAdminDashboard } from "@/lib/action-helpers";
+import { assignMandatoryActivitiesToStudent } from "@/lib/assign-mandatory-activities";
 
 export const updateUserStatusAction = async (userId: string, status: UserStatus, reason?: string) =>
     safeAction(async () => {
@@ -38,6 +39,17 @@ export const updateUserStatusAction = async (userId: string, status: UserStatus,
                 },
             }),
         ]);
+
+        // When approving, auto-assign matching mandatory activities
+        if (status === "APPROVED") {
+            const profile = await prisma.studentProfile.findUnique({
+                where: { userId },
+                select: { scholarshipId: true, degreeLevel: true, yearLevel: true },
+            });
+            if (profile) {
+                await assignMandatoryActivitiesToStudent(userId, profile);
+            }
+        }
 
         revalidatePath("/admin/users");
         revalidateAdminDashboard();
@@ -279,6 +291,16 @@ export const adminUpdateStudentProfileAction = async (userId: string, values: z.
             }),
         ]);
 
+        // Re-assign mandatory activities if profile filters changed
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { status: true } });
+        if (user?.status === "APPROVED") {
+            await assignMandatoryActivitiesToStudent(userId, {
+                scholarshipId: profile.scholarshipId,
+                degreeLevel: profile.degreeLevel,
+                yearLevel,
+            });
+        }
+
         revalidatePath(`/admin/users/${userId}`);
         return { success: "อัปเดตข้อมูลนิสิตเรียบร้อยแล้ว" };
     }, "เกิดข้อผิดพลาดในการแก้ไขข้อมูลนิสิต");
@@ -391,6 +413,20 @@ export const adminChangeScholarshipAction = async (userId: string, scholarshipId
                 },
             }),
         ]);
+
+        // Re-assign mandatory activities for new scholarship
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { status: true } });
+        const profile = await prisma.studentProfile.findUnique({
+            where: { userId },
+            select: { degreeLevel: true, yearLevel: true },
+        });
+        if (user?.status === "APPROVED" && profile) {
+            await assignMandatoryActivitiesToStudent(userId, {
+                scholarshipId,
+                degreeLevel: profile.degreeLevel,
+                yearLevel: profile.yearLevel,
+            });
+        }
 
         revalidatePath(`/admin/users/${userId}`);
         return { success: `เปลี่ยนทุนการศึกษาเป็น "${scholarship.name}" เรียบร้อยแล้ว` };
