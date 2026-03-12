@@ -21,15 +21,28 @@ export const updateUserStatusAction = async (userId: string, status: UserStatus,
             PENDING: "USER_REINSTATED",
         } as const)[status] ?? "USER_APPROVED";
 
-        // Single transaction: update + audit log in one DB roundtrip.
-        // The where-clause { role: "STUDENT" } guards against invalid targets;
-        // Prisma throws RecordNotFound (caught by safeAction) if user doesn't exist.
+        // When approving, also auto-verify email if not yet verified — so the
+        // student can log in immediately without waiting for the email link.
+        const user = await prisma.user.findUnique({
+            where: { id: userId, role: "STUDENT" },
+            select: { id: true, emailVerified: true },
+        });
+        if (!user) return { error: "ไม่พบข้อมูลนิสิต" };
+
+        const shouldAutoVerifyEmail = status === "APPROVED" && !user.emailVerified;
+
         await prisma.$transaction([
             prisma.user.update({
-                where: { id: userId, role: "STUDENT" },
-                data: { status },
-                select: { id: true }, // minimal return
+                where: { id: userId },
+                data: {
+                    status,
+                    ...(shouldAutoVerifyEmail && { emailVerified: new Date() }),
+                },
+                select: { id: true },
             }),
+            ...(shouldAutoVerifyEmail
+                ? [prisma.emailVerificationToken.deleteMany({ where: { userId } })]
+                : []),
             prisma.auditLog.create({
                 data: {
                     actorAdminId: session.user.id,
@@ -529,6 +542,40 @@ export const reviewActivitySubmissionAction = async (
         revalidatePath("/achievements");
         return { success: status === "VERIFIED" ? "อนุมัติงานเรียบร้อย" : "ปฏิเสธงานเรียบร้อย" };
     }, "เกิดข้อผิดพลาดในการตรวจสอบงาน");
+
+// ── ADMIN VERIFY EMAIL ──────────────────────────────────────────────────────
+
+export const adminVerifyEmailAction = async (userId: string) =>
+    safeAction(async () => {
+        const session = await requireAdmin();
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId, role: "STUDENT" },
+            select: { id: true, email: true, emailVerified: true },
+        });
+        if (!user) return { error: "ไม่พบข้อมูลนิสิต" };
+        if (user.emailVerified) return { error: "อีเมลนี้ยืนยันแล้ว" };
+
+        await prisma.$transaction([
+            prisma.user.update({
+                where: { id: userId },
+                data: { emailVerified: new Date() },
+            }),
+            // Clean up any pending verification tokens
+            prisma.emailVerificationToken.deleteMany({ where: { userId } }),
+            prisma.auditLog.create({
+                data: {
+                    actorAdminId: session.user.id,
+                    action: "EMAIL_VERIFIED_BY_ADMIN",
+                    targetUserId: userId,
+                    detailJson: { email: user.email },
+                },
+            }),
+        ]);
+
+        revalidatePath("/admin/users");
+        return { success: `ยืนยันอีเมล ${user.email} เรียบร้อยแล้ว` };
+    }, "เกิดข้อผิดพลาดในการยืนยันอีเมล");
 
 // ── CHANGE STUDENT SCHOLARSHIP ───────────────────────────────────────────────
 

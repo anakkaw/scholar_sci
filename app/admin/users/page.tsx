@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { InlineEditText } from "./InlineEditText";
 import { InlineEditDegreeLevel } from "./InlineEditDegreeLevel";
+import { AdminVerifyEmailButton } from "./AdminVerifyEmailButton";
 
 const STATUS_FILTERS = [
     { label: "ทั้งหมด", value: "ALL" },
@@ -217,7 +218,14 @@ export default async function AdminUsersPage(
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground">{user.email}</TableCell>
+                                            <TableCell className="text-xs text-muted-foreground">
+                                                <span>{user.email}</span>
+                                                {!user.emailVerified && (
+                                                    <span className="ml-1.5 inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700">
+                                                        ยังไม่ยืนยัน
+                                                    </span>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="max-w-[180px]">
                                                 <span className="text-xs text-slate-600 dark:text-gray-300 truncate block" title={profile?.scholarship?.name}>
                                                     {profile?.scholarship?.name || <span className="text-slate-300 dark:text-gray-600">ไม่ระบุ</span>}
@@ -238,6 +246,7 @@ export default async function AdminUsersPage(
                                             </TableCell>
                                             <TableCell className="text-right pr-5">
                                                 <div className="flex items-center justify-end gap-1">
+                                                    <AdminVerifyEmailButton userId={user.id} emailVerified={!!user.emailVerified} />
                                                     <Button variant="ghost" size="sm" asChild
                                                         className="h-7 w-7 p-0 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700">
                                                         <Link href={`/admin/users/${user.id}`}>
