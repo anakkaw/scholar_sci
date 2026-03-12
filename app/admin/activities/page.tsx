@@ -18,6 +18,7 @@ export default async function AdminActivitiesPage() {
             include: {
                 scholarship: { select: { name: true } },
                 participations: { select: { attended: true } },
+                requirements: { select: { title: true }, orderBy: { orderIndex: "asc" } },
             },
             orderBy: { createdAt: "desc" },
         }),
@@ -89,9 +90,14 @@ export default async function AdminActivitiesPage() {
                                                 <Badge variant="outline" className="text-[10px]">
                                                     {activity.yearLevel ? `ปีที่ ${activity.yearLevel}` : "ทุกชั้นปี"}
                                                 </Badge>
+                                                {activity.requirements.length > 0 && (
+                                                    <Badge variant="outline" className="text-[10px] border-amber-200 text-amber-600 dark:border-amber-800 dark:text-amber-400">
+                                                        {activity.requirements.length} งานที่ต้องส่ง
+                                                    </Badge>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 shrink-0">
+                                        <div className="flex items-center gap-1 shrink-0">
                                             <Link href={`/admin/activities/${activity.id}`}>
                                                 <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800/40 dark:text-amber-300 dark:hover:bg-amber-900/20">
                                                     <Users className="w-3 h-3" />
@@ -99,6 +105,18 @@ export default async function AdminActivitiesPage() {
                                                     <ChevronRight className="w-3 h-3" />
                                                 </Button>
                                             </Link>
+                                            <MandatoryActivityForm
+                                                scholarships={scholarships}
+                                                activity={{
+                                                    id: activity.id,
+                                                    title: activity.title,
+                                                    description: activity.description,
+                                                    scholarshipId: activity.scholarshipId,
+                                                    degreeLevel: activity.degreeLevel,
+                                                    yearLevel: activity.yearLevel,
+                                                    requirements: activity.requirements.map(r => r.title),
+                                                }}
+                                            />
                                             <form action={async () => {
                                                 "use server";
                                                 await deleteMandatoryActivityAction(activity.id);

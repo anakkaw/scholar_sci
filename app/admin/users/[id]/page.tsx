@@ -132,6 +132,7 @@ export default async function AdminUserDetailPage({
                                     nickname: profile.nickname,
                                     studentIdCode: profile.studentIdCode,
                                     major: profile.major,
+                                    degreeLevel: profile.degreeLevel,
                                     phone: profile.phone,
                                     backupEmail: profile.backupEmail,
                                     address: profile.address,

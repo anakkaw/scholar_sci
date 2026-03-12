@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ProfileSchema, MAJOR_OPTIONS } from "@/lib/validations";
+import { ProfileSchema, MAJOR_OPTIONS, DEGREE_LEVEL_OPTIONS } from "@/lib/validations";
 import { adminUpdateStudentProfileAction } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ interface EditStudentProfileModalProps {
         nickname?: string | null;
         studentIdCode?: string | null;
         major?: string | null;
+        degreeLevel?: string | null;
         phone?: string | null;
         backupEmail?: string | null;
         address?: string | null;
@@ -65,6 +66,10 @@ export function EditStudentProfileModal({
         ? (currentProfile.major as typeof MAJOR_OPTIONS[number])
         : "";
 
+    const initialDegreeLevel = DEGREE_LEVEL_OPTIONS.includes(currentProfile.degreeLevel as any)
+        ? (currentProfile.degreeLevel as typeof DEGREE_LEVEL_OPTIONS[number])
+        : "";
+
     const form = useForm<z.infer<typeof ProfileSchema>>({
         resolver: zodResolver(ProfileSchema),
         defaultValues: {
@@ -72,6 +77,7 @@ export function EditStudentProfileModal({
             nickname: currentProfile.nickname || "",
             studentIdCode: currentProfile.studentIdCode || "",
             major: initialMajor,
+            degreeLevel: initialDegreeLevel,
             phone: currentProfile.phone || "",
             backupEmail: currentProfile.backupEmail || "",
             address: currentProfile.address || "",
@@ -262,6 +268,34 @@ export function EditStudentProfileModal({
                                         )}
                                     </div>
                                 </div>
+
+                                <FormField
+                                    control={form.control}
+                                    name="degreeLevel"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>ระดับการศึกษา</FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value || ""}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="เลือกระดับ..." />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {DEGREE_LEVEL_OPTIONS.map((opt) => (
+                                                        <SelectItem key={opt} value={opt}>
+                                                            {opt}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
                                 <FormField
                                     control={form.control}

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { UserStatus, AuditAction, VerificationStatus, ReportStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import * as z from "zod";
-import { ProfileSchema } from "@/lib/validations";
+import { ProfileSchema, DEGREE_LEVEL_OPTIONS } from "@/lib/validations";
 import { computeYearLevel } from "@/lib/utils";
 import { requireAdmin, safeAction, revalidateAdminDashboard } from "@/lib/action-helpers";
 import { assignMandatoryActivitiesToStudent } from "@/lib/assign-mandatory-activities";
@@ -173,6 +173,7 @@ export const createMandatoryActivityAction = async (data: {
     scholarshipId?: string;
     degreeLevel?: string;
     yearLevel?: number;
+    requirements?: string[];
 }) =>
     safeAction(async () => {
         const session = await requireAdmin();
@@ -192,6 +193,8 @@ export const createMandatoryActivityAction = async (data: {
             select: { id: true },
         });
 
+        const reqs = (data.requirements ?? []).map(r => r.trim()).filter(Boolean);
+
         const activity = await prisma.mandatoryActivity.create({
             data: {
                 title: data.title.trim(),
@@ -199,6 +202,11 @@ export const createMandatoryActivityAction = async (data: {
                 scholarshipId: data.scholarshipId || null,
                 degreeLevel: data.degreeLevel || null,
                 yearLevel: data.yearLevel || null,
+                ...(reqs.length > 0 ? {
+                    requirements: {
+                        create: reqs.map((title, i) => ({ title, orderIndex: i })),
+                    },
+                } : {}),
             },
         });
 
@@ -212,13 +220,91 @@ export const createMandatoryActivityAction = async (data: {
             data: {
                 actorAdminId: session.user.id,
                 action: "MANDATORY_ACTIVITY_CREATED",
-                detailJson: { title: data.title, assignedCount: matchingStudents.length },
+                detailJson: { title: data.title, assignedCount: matchingStudents.length, requirementsCount: reqs.length },
             },
         });
 
         revalidatePath("/admin/activities");
         return { success: `สร้างกิจกรรมและกำหนดให้นิสิต ${matchingStudents.length} คน` };
     }, "เกิดข้อผิดพลาดในการสร้างกิจกรรม");
+
+export const updateMandatoryActivityAction = async (
+    activityId: string,
+    data: { title: string; description?: string; scholarshipId?: string; degreeLevel?: string; yearLevel?: number; requirements?: string[] },
+) =>
+    safeAction(async () => {
+        const session = await requireAdmin();
+        if (!data.title?.trim()) return { error: "กรุณาระบุชื่อกิจกรรม" };
+
+        const existing = await prisma.mandatoryActivity.findUnique({ where: { id: activityId } });
+        if (!existing) return { error: "ไม่พบกิจกรรม" };
+
+        const reqs = (data.requirements ?? []).map(r => r.trim()).filter(Boolean);
+
+        await prisma.$transaction([
+            prisma.mandatoryActivity.update({
+                where: { id: activityId },
+                data: {
+                    title: data.title.trim(),
+                    description: data.description?.trim() || null,
+                    scholarshipId: data.scholarshipId || null,
+                    degreeLevel: data.degreeLevel || null,
+                    yearLevel: data.yearLevel || null,
+                },
+            }),
+            prisma.activityRequirement.deleteMany({ where: { activityId } }),
+            ...(reqs.length > 0 ? [
+                prisma.activityRequirement.createMany({
+                    data: reqs.map((title, i) => ({ activityId, title, orderIndex: i })),
+                }),
+            ] : []),
+        ]);
+
+        // Re-assign: find students matching NEW criteria, add missing participations
+        const filtersChanged =
+            existing.scholarshipId !== (data.scholarshipId || null) ||
+            existing.degreeLevel !== (data.degreeLevel || null) ||
+            existing.yearLevel !== (data.yearLevel || null);
+
+        let newAssigned = 0;
+        if (filtersChanged) {
+            const profileWhere: Record<string, unknown> = {};
+            if (data.scholarshipId) profileWhere.scholarshipId = data.scholarshipId;
+            if (data.degreeLevel) profileWhere.degreeLevel = data.degreeLevel;
+            if (data.yearLevel) profileWhere.yearLevel = data.yearLevel;
+
+            const matchingStudents = await prisma.user.findMany({
+                where: {
+                    role: "STUDENT",
+                    status: "APPROVED",
+                    ...(Object.keys(profileWhere).length > 0 ? { studentProfile: { is: profileWhere } } : {}),
+                },
+                select: { id: true },
+            });
+
+            if (matchingStudents.length > 0) {
+                const result = await prisma.mandatoryActivityParticipation.createMany({
+                    data: matchingStudents.map(s => ({ activityId, userId: s.id })),
+                    skipDuplicates: true,
+                });
+                newAssigned = result.count;
+            }
+        }
+
+        await prisma.auditLog.create({
+            data: {
+                actorAdminId: session.user.id,
+                action: "MANDATORY_ACTIVITY_UPDATED",
+                detailJson: { title: data.title, filtersChanged, newAssigned },
+            },
+        });
+
+        revalidatePath("/admin/activities");
+        revalidatePath(`/admin/activities/${activityId}`);
+        return { success: filtersChanged && newAssigned > 0
+            ? `อัปเดตกิจกรรมและเพิ่มนิสิตใหม่ ${newAssigned} คน`
+            : "อัปเดตกิจกรรมเรียบร้อยแล้ว" };
+    }, "เกิดข้อผิดพลาดในการแก้ไขกิจกรรม");
 
 export const deleteMandatoryActivityAction = async (activityId: string) =>
     safeAction(async () => {
@@ -264,8 +350,9 @@ export const adminUpdateStudentProfileAction = async (userId: string, values: z.
         const profile = await prisma.studentProfile.findUnique({ where: { userId } });
         if (!profile) return { error: "ไม่พบข้อมูลนิสิต" };
 
-        const { fullName, nickname, studentIdCode, major, phone, backupEmail, address } = validatedFields.data;
+        const { fullName, nickname, studentIdCode, major, degreeLevel, phone, backupEmail, address } = validatedFields.data;
         const yearLevel = studentIdCode ? computeYearLevel(studentIdCode) : null;
+        const resolvedDegreeLevel = degreeLevel === "" ? null : degreeLevel || null;
 
         await prisma.$transaction([
             prisma.studentProfile.update({
@@ -275,6 +362,7 @@ export const adminUpdateStudentProfileAction = async (userId: string, values: z.
                     nickname: nickname || null,
                     studentIdCode: studentIdCode || null,
                     major: major === "" ? null : major || null,
+                    degreeLevel: resolvedDegreeLevel,
                     yearLevel,
                     phone: phone || null,
                     backupEmail: backupEmail === "" ? null : backupEmail,
@@ -286,7 +374,7 @@ export const adminUpdateStudentProfileAction = async (userId: string, values: z.
                     actorAdminId: session.user.id,
                     action: "STUDENT_PROFILE_UPDATED",
                     targetUserId: userId,
-                    detailJson: { fullName, studentIdCode, major },
+                    detailJson: { fullName, studentIdCode, major, degreeLevel: resolvedDegreeLevel },
                 },
             }),
         ]);
@@ -296,7 +384,7 @@ export const adminUpdateStudentProfileAction = async (userId: string, values: z.
         if (user?.status === "APPROVED") {
             await assignMandatoryActivitiesToStudent(userId, {
                 scholarshipId: profile.scholarshipId,
-                degreeLevel: profile.degreeLevel,
+                degreeLevel: resolvedDegreeLevel,
                 yearLevel,
             });
         }
@@ -304,6 +392,62 @@ export const adminUpdateStudentProfileAction = async (userId: string, values: z.
         revalidatePath(`/admin/users/${userId}`);
         return { success: "อัปเดตข้อมูลนิสิตเรียบร้อยแล้ว" };
     }, "เกิดข้อผิดพลาดในการแก้ไขข้อมูลนิสิต");
+
+export const adminQuickUpdateStudentFieldAction = async (
+    userId: string,
+    field: "fullName" | "studentIdCode" | "degreeLevel",
+    value: string,
+) =>
+    safeAction(async () => {
+        const session = await requireAdmin();
+
+        const trimmed = value.trim();
+
+        if (field === "fullName" && !trimmed) return { error: "กรุณาระบุชื่อ-นามสกุล" };
+        if (field === "degreeLevel" && trimmed && !(DEGREE_LEVEL_OPTIONS as readonly string[]).includes(trimmed))
+            return { error: "ระดับการศึกษาไม่ถูกต้อง" };
+
+        const profile = await prisma.studentProfile.findUnique({ where: { userId } });
+        if (!profile) return { error: "ไม่พบข้อมูลนิสิต" };
+
+        const updateData: Record<string, unknown> = {};
+        let yearLevel = profile.yearLevel;
+
+        if (field === "fullName") {
+            updateData.fullName = trimmed;
+        } else if (field === "studentIdCode") {
+            updateData.studentIdCode = trimmed || null;
+            yearLevel = trimmed ? computeYearLevel(trimmed) : null;
+            updateData.yearLevel = yearLevel;
+        } else {
+            updateData.degreeLevel = trimmed || null;
+        }
+
+        await prisma.$transaction([
+            prisma.studentProfile.update({ where: { userId }, data: updateData }),
+            prisma.auditLog.create({
+                data: {
+                    actorAdminId: session.user.id,
+                    action: "STUDENT_PROFILE_UPDATED",
+                    targetUserId: userId,
+                    detailJson: { field, oldValue: (profile as Record<string, unknown>)[field], newValue: trimmed || null },
+                },
+            }),
+        ]);
+
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { status: true } });
+        if (user?.status === "APPROVED") {
+            await assignMandatoryActivitiesToStudent(userId, {
+                scholarshipId: profile.scholarshipId,
+                degreeLevel: field === "degreeLevel" ? (trimmed || null) : profile.degreeLevel,
+                yearLevel,
+            });
+        }
+
+        revalidatePath("/admin/users");
+        revalidatePath(`/admin/users/${userId}`);
+        return { success: "บันทึกเรียบร้อย" };
+    }, "เกิดข้อผิดพลาดในการแก้ไขข้อมูล");
 
 // ── PROGRESS REPORT REVIEW ───────────────────────────────────────────────────
 

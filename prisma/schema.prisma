@@ -79,6 +79,7 @@ enum AuditAction {
   ADMIN_CREATED
   STUDENT_PROFILE_UPDATED
   MANDATORY_ACTIVITY_CREATED
+  MANDATORY_ACTIVITY_UPDATED
   MANDATORY_ACTIVITY_DELETED
   ATTENDANCE_UPDATED
   ACTIVITY_SUBMISSION_REVIEWED
@@ -287,9 +288,22 @@ model MandatoryActivity {
 
   scholarship    Scholarship?                     @relation(fields: [scholarshipId], references: [id])
   participations MandatoryActivityParticipation[]
+  requirements   ActivityRequirement[]
 
   @@index([scholarshipId])
   @@index([scholarshipId, degreeLevel, yearLevel]) // assign-mandatory-activities filter
+}
+
+model ActivityRequirement {
+  id         String   @id @default(cuid())
+  activityId String
+  title      String
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  activity MandatoryActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId])
 }
 
 model MandatoryActivityParticipation {

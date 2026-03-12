@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, CheckCircle2, Clock, FileText } from "lucide-react";
+import { ArrowLeft, Users, CheckCircle2, Clock, FileText, ListChecks } from "lucide-react";
 import { AttendanceToggleButton } from "./AttendanceToggleButton";
 import { SubmissionReviewDialog } from "./SubmissionReviewDialog";
 
@@ -18,6 +18,7 @@ export default async function ActivityAttendancePage({ params }: { params: Promi
         where: { id },
         include: {
             scholarship: { select: { name: true } },
+            requirements: { orderBy: { orderIndex: "asc" } },
             participations: {
                 include: {
                     user: {
@@ -90,6 +91,21 @@ export default async function ActivityAttendancePage({ params }: { params: Promi
                     </Badge>
                 </div>
             </div>
+
+            {/* Requirements */}
+            {activity.requirements.length > 0 && (
+                <div className="rounded-xl border border-amber-100 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-900/10 px-4 py-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                        <ListChecks className="w-4 h-4 text-amber-500" />
+                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">งานที่ต้องส่ง ({activity.requirements.length} รายการ)</span>
+                    </div>
+                    <ol className="list-decimal list-inside space-y-1 ml-1">
+                        {activity.requirements.map(req => (
+                            <li key={req.id} className="text-sm text-slate-700 dark:text-gray-300">{req.title}</li>
+                        ))}
+                    </ol>
+                </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

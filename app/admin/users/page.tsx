@@ -14,6 +14,8 @@ import { Eye, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { InlineEditText } from "./InlineEditText";
+import { InlineEditDegreeLevel } from "./InlineEditDegreeLevel";
 
 const STATUS_FILTERS = [
     { label: "ทั้งหมด", value: "ALL" },
@@ -161,6 +163,7 @@ export default async function AdminUsersPage(
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">ชื่อ-นามสกุล</TableHead>
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">อีเมล</TableHead>
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">ทุนการศึกษา</TableHead>
+                                    <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">ระดับ</TableHead>
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">วันที่สมัคร</TableHead>
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">สถานะ</TableHead>
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400 text-right pr-5">จัดการ</TableHead>
@@ -169,7 +172,7 @@ export default async function AdminUsersPage(
                             <TableBody>
                                 {users.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7}>
+                                        <TableCell colSpan={8}>
                                             <div className="flex flex-col items-center py-12 gap-3">
                                                 <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-gray-700 flex items-center justify-center">
                                                     <Users className="w-6 h-6 text-slate-300 dark:text-gray-600" />
@@ -182,8 +185,13 @@ export default async function AdminUsersPage(
                                     const profile = user.studentProfile;
                                     return (
                                         <TableRow key={user.id} className="border-b border-slate-50 dark:border-gray-700 hover:bg-amber-50/30 dark:hover:bg-amber-900/20 transition-colors">
-                                            <TableCell className="text-xs font-medium text-slate-600 dark:text-gray-300 pl-5">
-                                                {profile?.studentIdCode || <span className="text-slate-300 dark:text-gray-600">—</span>}
+                                            <TableCell className="pl-5">
+                                                <InlineEditText
+                                                    userId={user.id}
+                                                    field="studentIdCode"
+                                                    currentValue={profile?.studentIdCode ?? null}
+                                                    placeholder="รหัสนิสิต"
+                                                />
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -197,9 +205,12 @@ export default async function AdminUsersPage(
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="min-w-0">
-                                                        <p className="text-sm font-medium text-slate-700 dark:text-gray-200 truncate">
-                                                            {profile?.fullName || <span className="text-slate-400 dark:text-gray-500">ยังไม่ระบุ</span>}
-                                                        </p>
+                                                        <InlineEditText
+                                                            userId={user.id}
+                                                            field="fullName"
+                                                            currentValue={profile?.fullName ?? null}
+                                                            placeholder="ชื่อ-นามสกุล"
+                                                        />
                                                         {profile?.nickname && (
                                                             <p className="text-[11px] text-muted-foreground truncate">({profile.nickname})</p>
                                                         )}
@@ -211,6 +222,12 @@ export default async function AdminUsersPage(
                                                 <span className="text-xs text-slate-600 dark:text-gray-300 truncate block" title={profile?.scholarship?.name}>
                                                     {profile?.scholarship?.name || <span className="text-slate-300 dark:text-gray-600">ไม่ระบุ</span>}
                                                 </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <InlineEditDegreeLevel
+                                                    userId={user.id}
+                                                    currentDegreeLevel={profile?.degreeLevel ?? null}
+                                                />
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                                                 {formatShortDate(user.createdAt)}

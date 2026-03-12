@@ -6,7 +6,7 @@ import { AchievementForm } from "@/components/student/achievement-form";
 import { ActivitySubmissionForm } from "@/components/student/activity-submission-form";
 import { formatDate } from "@/lib/utils";
 import { ACHIEVEMENT_TYPES } from "@/types/index";
-import { FileText, Trash, ExternalLink, Trophy, CalendarCheck, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { FileText, Trash, ExternalLink, Trophy, CalendarCheck, Clock, CheckCircle2, XCircle, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteAchievementAction } from "@/actions/achievement";
 import { deleteActivitySubmissionAction } from "@/actions/activity-submission";
@@ -19,7 +19,9 @@ export default async function AchievementsPage() {
         prisma.mandatoryActivityParticipation.findMany({
             where: { userId: session.user.id },
             include: {
-                activity: true,
+                activity: {
+                include: { requirements: { orderBy: { orderIndex: "asc" } } },
+            },
                 submissions: {
                     include: { attachments: true },
                     orderBy: { createdAt: "desc" },
@@ -137,6 +139,18 @@ export default async function AchievementsPage() {
                                             <p className="text-sm text-slate-700 dark:text-gray-300 leading-snug">{p.activity.title}</p>
                                             {p.activity.description && (
                                                 <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{p.activity.description}</p>
+                                            )}
+                                            {p.activity.requirements.length > 0 && (
+                                                <div className="mt-1.5 flex items-start gap-1.5">
+                                                    <ListChecks className="w-3 h-3 text-amber-400 mt-0.5 shrink-0" />
+                                                    <div className="text-[11px] text-muted-foreground">
+                                                        {p.activity.requirements.map((r, i) => (
+                                                            <span key={r.id}>
+                                                                {r.title}{i < p.activity.requirements.length - 1 ? " · " : ""}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
