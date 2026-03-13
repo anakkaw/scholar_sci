@@ -64,29 +64,26 @@ export function SubmissionReviewDialog({ submission, studentName }: Props) {
         });
     };
 
-    // Already reviewed
-    if (optimisticStatus === "VERIFIED") {
-        return (
-            <span className="text-[10px] font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" /> งานผ่าน
-            </span>
-        );
-    }
+    const isReviewed = optimisticStatus === "VERIFIED" || optimisticStatus === "REJECTED";
 
-    if (optimisticStatus === "REJECTED") {
-        return (
-            <span className="text-[10px] font-semibold text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
-                <XCircle className="w-3 h-3" /> ไม่ผ่าน
-            </span>
-        );
-    }
+    const statusBadge = optimisticStatus === "VERIFIED" ? (
+        <span className="text-[10px] font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" /> งานผ่าน
+        </span>
+    ) : optimisticStatus === "REJECTED" ? (
+        <span className="text-[10px] font-semibold text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
+            <XCircle className="w-3 h-3" /> ไม่ผ่าน
+        </span>
+    ) : (
+        <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
+            <Clock className="w-3 h-3" /> รอตรวจ
+        </span>
+    );
 
     return (
         <>
             <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> รอตรวจ
-                </span>
+                {statusBadge}
                 <Button
                     variant="outline"
                     size="sm"
@@ -98,14 +95,14 @@ export function SubmissionReviewDialog({ submission, studentName }: Props) {
                         setDialogOpen(true);
                     }}
                 >
-                    <Eye className="w-3 h-3 mr-1" /> ตรวจงาน
+                    <Eye className="w-3 h-3 mr-1" /> {isReviewed ? "ดูงาน" : "ตรวจงาน"}
                 </Button>
             </div>
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>ตรวจงานกิจกรรม</DialogTitle>
+                        <DialogTitle>{isReviewed ? "รายละเอียดงาน" : "ตรวจงานกิจกรรม"}</DialogTitle>
                         <DialogDescription>งานจาก: {studentName}</DialogDescription>
                     </DialogHeader>
 
@@ -114,7 +111,7 @@ export function SubmissionReviewDialog({ submission, studentName }: Props) {
                         {submission.message && (
                             <div>
                                 <Label className="text-xs text-muted-foreground">ข้อความจากนิสิต</Label>
-                                <div className="mt-1 text-sm bg-slate-50 dark:bg-gray-700/50 rounded-lg px-3 py-2.5">
+                                <div className="mt-1 text-sm bg-slate-50 dark:bg-gray-700/50 rounded-lg px-3 py-2.5 whitespace-pre-wrap">
                                     {submission.message}
                                 </div>
                             </div>
@@ -145,7 +142,22 @@ export function SubmissionReviewDialog({ submission, studentName }: Props) {
                             <p className="text-sm text-muted-foreground italic">ไม่มีข้อความหรือไฟล์แนบ</p>
                         )}
 
-                        {/* Review note */}
+                        {/* Submitted date */}
+                        <div className="text-[11px] text-muted-foreground">
+                            ส่งเมื่อ: {new Date(submission.createdAt).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })}
+                        </div>
+
+                        {/* Show existing review note for already-reviewed submissions */}
+                        {isReviewed && submission.reviewNote && !pendingStatus && (
+                            <div>
+                                <Label className="text-xs text-muted-foreground">หมายเหตุจากแอดมิน</Label>
+                                <div className="mt-1 text-sm bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2.5 whitespace-pre-wrap">
+                                    {submission.reviewNote}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Review note input */}
                         {pendingStatus && (
                             <div>
                                 <Label htmlFor="submission-note">หมายเหตุ (ไม่บังคับ)</Label>
@@ -169,6 +181,7 @@ export function SubmissionReviewDialog({ submission, studentName }: Props) {
                         {!pendingStatus ? (
                             <>
                                 <Button variant="outline" onClick={() => setDialogOpen(false)}>ปิด</Button>
+                                {/* Allow re-reviewing even already-reviewed submissions */}
                                 <Button
                                     variant="outline"
                                     disabled={isPending}

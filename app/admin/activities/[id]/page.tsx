@@ -199,19 +199,35 @@ export default async function ActivityAttendancePage({ params }: { params: Promi
                                     </div>
                                 </div>
 
-                                {/* Submission info */}
-                                {latestSubmission && (
-                                    <div className="ml-9 flex items-center gap-2 flex-wrap">
-                                        <SubmissionReviewDialog
-                                            submission={latestSubmission}
-                                            studentName={profile?.fullName ?? "ไม่ระบุชื่อ"}
-                                        />
-                                        {latestSubmission.attachments.length > 0 && (
-                                            <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
-                                                <FileText className="w-3 h-3" />
-                                                {latestSubmission.attachments.length} ไฟล์แนบ
-                                            </span>
-                                        )}
+                                {/* Submissions info */}
+                                {p.submissions.length > 0 && (
+                                    <div className="ml-9 space-y-2">
+                                        {p.submissions.map((sub, subIdx) => (
+                                            <div key={sub.id} className="space-y-1">
+                                                {p.submissions.length > 1 && (
+                                                    <span className="text-[10px] text-muted-foreground">
+                                                        งานครั้งที่ {p.submissions.length - subIdx}
+                                                    </span>
+                                                )}
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <SubmissionReviewDialog
+                                                        submission={sub}
+                                                        studentName={profile?.fullName ?? "ไม่ระบุชื่อ"}
+                                                    />
+                                                    {sub.attachments.length > 0 && (
+                                                        <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                                                            <FileText className="w-3 h-3" />
+                                                            {sub.attachments.length} ไฟล์แนบ
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {sub.message && (
+                                                    <p className="text-[11px] text-muted-foreground line-clamp-2 pl-0.5">
+                                                        {sub.message}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>
