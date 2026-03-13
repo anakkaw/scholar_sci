@@ -17,6 +17,8 @@ import Link from "next/link";
 import { InlineEditText } from "./InlineEditText";
 import { InlineEditDegreeLevel } from "./InlineEditDegreeLevel";
 import { AdminVerifyEmailButton } from "./AdminVerifyEmailButton";
+import { DeleteUserButton } from "./DeleteUserButton";
+import { SortableHeader } from "./SortableHeader";
 
 const STATUS_FILTERS = [
     { label: "ทั้งหมด", value: "ALL" },
@@ -26,7 +28,7 @@ const STATUS_FILTERS = [
 ];
 
 export default async function AdminUsersPage(
-    props: { searchParams?: Promise<{ q?: string; status?: string; pending?: string; scholarship?: string }> }
+    props: { searchParams?: Promise<{ q?: string; status?: string; pending?: string; scholarship?: string; sort?: string; dir?: string }> }
 ) {
     const searchParams = await props.searchParams;
     const session = await getSession();
@@ -36,6 +38,8 @@ export default async function AdminUsersPage(
     const statusFilter = searchParams?.status || "ALL";
     const pendingFilter = searchParams?.pending || "";
     const scholarshipFilter = searchParams?.scholarship || "";
+    const sortField = searchParams?.sort || "";
+    const sortDir = (searchParams?.dir === "desc" ? "desc" : "asc") as "asc" | "desc";
 
     // Build where clause
     const where: Prisma.UserWhereInput = {
@@ -58,7 +62,11 @@ export default async function AdminUsersPage(
         prisma.user.findMany({
             where,
             include: { studentProfile: { include: { scholarship: { select: { id: true, name: true } } } } },
-            orderBy: { createdAt: 'desc' }
+            orderBy: sortField === "studentIdCode"
+                ? { studentProfile: { studentIdCode: sortDir } }
+                : sortField === "fullName"
+                    ? { studentProfile: { fullName: sortDir } }
+                    : { createdAt: 'desc' },
         }),
         prisma.user.groupBy({
             by: ["status"],
@@ -160,8 +168,12 @@ export default async function AdminUsersPage(
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-slate-50/80 dark:bg-gray-800/80 border-b border-slate-100 dark:border-gray-700">
-                                    <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400 pl-5">รหัสนิสิต</TableHead>
-                                    <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">ชื่อ-นามสกุล</TableHead>
+                                    <TableHead className="pl-5">
+                                        <Suspense><SortableHeader label="รหัสนิสิต" sortKey="studentIdCode" /></Suspense>
+                                    </TableHead>
+                                    <TableHead>
+                                        <Suspense><SortableHeader label="ชื่อ-นามสกุล" sortKey="fullName" /></Suspense>
+                                    </TableHead>
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">อีเมล</TableHead>
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">ทุนการศึกษา</TableHead>
                                     <TableHead className="text-xs font-semibold text-slate-500 dark:text-gray-400">ระดับ</TableHead>
@@ -255,6 +267,7 @@ export default async function AdminUsersPage(
                                                         </Link>
                                                     </Button>
                                                     <UserStatusDropdown userId={user.id} currentStatus={user.status} />
+                                                    <DeleteUserButton userId={user.id} email={user.email} />
                                                 </div>
                                             </TableCell>
                                         </TableRow>

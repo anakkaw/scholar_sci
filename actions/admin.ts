@@ -577,6 +577,34 @@ export const adminVerifyEmailAction = async (userId: string) =>
         return { success: `ยืนยันอีเมล ${user.email} เรียบร้อยแล้ว` };
     }, "เกิดข้อผิดพลาดในการยืนยันอีเมล");
 
+// ── DELETE STUDENT USER ──────────────────────────────────────────────────────
+
+export const adminDeleteUserAction = async (userId: string) =>
+    safeAction(async () => {
+        const session = await requireAdmin();
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId, role: "STUDENT" },
+            select: { id: true, email: true, studentProfile: { select: { fullName: true } } },
+        });
+        if (!user) return { error: "ไม่พบข้อมูลนิสิต" };
+
+        // Log before delete (cascade will remove the user)
+        await prisma.auditLog.create({
+            data: {
+                actorAdminId: session.user.id,
+                action: "USER_DELETED",
+                detailJson: { email: user.email, fullName: user.studentProfile?.fullName },
+            },
+        });
+
+        await prisma.user.delete({ where: { id: userId } });
+
+        revalidatePath("/admin/users");
+        revalidateAdminDashboard();
+        return { success: `ลบผู้ใช้ ${user.email} เรียบร้อยแล้ว` };
+    }, "เกิดข้อผิดพลาดในการลบผู้ใช้");
+
 // ── CHANGE STUDENT SCHOLARSHIP ───────────────────────────────────────────────
 
 export const adminChangeScholarshipAction = async (userId: string, scholarshipId: string) =>
